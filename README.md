@@ -13,6 +13,6 @@ This app has the following features:
 
 <img src="https://i.imgur.com/6aJdrHu.jpg"/>
 
-<img src="https://i.imgur.com/WSmsbDug.png"/>
+<img src="https://i.imgur.com/WSmsbDug.png" width="1400"/>
 
 <img src="https://i.imgur.com/bmpu5gV.png"/>
