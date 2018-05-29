@@ -1,6 +1,7 @@
 ﻿using BasecodeLibrary.Utilities;
 using LightBuzz.SMTP;
 using Models.MotionDetector;
+using MotionDetector.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -28,46 +29,18 @@ namespace MotionDetector.ViewModels
 {
     public class MotionDetectorViewModel : ViewModelBase
     {
-        // Bound properties
+        #region Bound Properties
 
-        /// <summary>
-        /// Sets the sensitivity of the image delta. If set to 10, then if any of the baseline images are greater than 10% different
-        /// than the captured image, it will alert.
-        /// </summary>
-        private int _sensitivity;
-
-        public int Sensitivity
-        {
-            get { return _sensitivity; }
-            set { _sensitivity = value; ConfigurationSettings.AppConfig.ImageDelta = value; OnPropertyChanged("Sensitivity"); }
-        }
-
-        private MediaCapture MediaCaptureElement { get; set; }
-
-        /// <summary>
-        /// The baseline images are what each newly captured image will be compared to.
-        /// </summary>
-        private List<byte[]> baselineImages;
-
-        private ObservableCollection<WriteableBitmap> _displayImages;
-
-        public ObservableCollection<WriteableBitmap> DisplayImages
-        {
-            get { return _displayImages; }
-            set { _displayImages = value; OnPropertyChanged("DisplayImages"); }
-        }
-
-        private ObservableCollection<WriteableBitmap> _alertDisplayImages;
-
-        public ObservableCollection<WriteableBitmap> AlertDisplayImages
-        {
-            get { return _alertDisplayImages; }
-            set { _alertDisplayImages = value; OnPropertyChanged("AlertDisplayImages"); }
-        }
-
-        public WriteableBitmap SelectedAlertImage { get; set; }
-
+        #region private backers
         private bool _isAlert;
+        private int _sensitivity;
+        private bool _autoSaveAlertImages;
+        private List<byte[]> baselineImages;
+        private bool _isNotRunningTest = true;
+        private string _autoSaveImageLocation;
+        private ObservableCollection<WriteableBitmap> _displayImages;
+        private ObservableCollection<AlertDisplayImageModel> _alertDisplayImages;
+        #endregion
 
         public bool IsAlert
         {
@@ -75,111 +48,130 @@ namespace MotionDetector.ViewModels
             set { _isAlert = value; OnPropertyChanged("IsAlert"); }
         }
 
+        public bool IsNotRunningTest
+        {
+            get { return _isNotRunningTest; }
+            set { _isNotRunningTest = value; OnPropertyChanged("IsNotRunningTest"); }
+        }
+
+        /// <summary>
+        /// Sets the sensitivity of the image delta. If set to 10, then if any of the baseline images are greater than 10% different
+        /// than the captured image, it will alert.
+        /// </summary>
+        public int Sensitivity
+        {
+            get { return _sensitivity; }
+            set { _sensitivity = value; ConfigurationSettings.AppConfig.ImageDelta = value; OnPropertyChanged("Sensitivity"); }
+        }
+        
+        public bool AutoSaveAlertImages
+        {
+            get { return _autoSaveAlertImages; }
+            set { _autoSaveAlertImages = value; OnPropertyChanged("AutoSaveAlertImages"); }
+        }
+
+        public string AutoSaveImageLocation
+        {
+            get { return _autoSaveImageLocation; }
+            set { _autoSaveImageLocation = value; OnPropertyChanged("AutoSaveImageLocation"); }
+        }
+
+        public ConfigModel ConfigurationSettings { get; set; }
+
+        private MediaCapture MediaCaptureElement { get; set; }
+
+        public WriteableBitmap SelectedAlertImage { get; set; }
+
+        /// <summary>
+        /// The baseline images are what each newly captured image will be compared to.
+        /// </summary>
+        public ObservableCollection<WriteableBitmap> DisplayImages
+        {
+            get { return _displayImages; }
+            set { _displayImages = value; OnPropertyChanged("DisplayImages"); }
+        }
+
+        public ObservableCollection<AlertDisplayImageModel> AlertDisplayImages
+        {
+            get { return _alertDisplayImages; }
+            set { _alertDisplayImages = value; OnPropertyChanged("AlertDisplayImages"); }
+        }
+
+        #region Command Bindings
         public ICommand UpdateSettingsCommand { get; set; }
         public ICommand RunTestsCommand { get; set; }
         public ICommand SaveImageCommand { get; set; }
+        #endregion
+
+        #endregion
+
+        #region Unbound properties
 
         /// <summary>
         /// The timer that controls the image test frequency 
         /// </summary>
         private DispatcherTimer captureTimer { get; set; }
 
+        private DispatcherTimer baselineTimer { get; set; }
+
+        private DispatcherTimer delayTimer { get; set; }
+
         private DisplayRequest displayRequest { get; set; }
+        
         private LowLagPhotoCapture lowLagCapture { get; set; }
+
 
         /// <summary>
         /// This is the list of images that will be emailed to the recipient once the threshold has been met.
         /// </summary>
         private List<IRandomAccessStream> streamList { get; set; }
 
-        public ConfigModel ConfigurationSettings { get; set; }
+        #endregion
+
+        #region Constructors
 
         public MotionDetectorViewModel()
         {
-
-            MediaCaptureElement = new MediaCapture();
+            delayTimer = new DispatcherTimer();
             baselineImages = new List<byte[]>();
             captureTimer = new DispatcherTimer();
+            baselineTimer = new DispatcherTimer();
             displayRequest = new DisplayRequest();
+            MediaCaptureElement = new MediaCapture();
             streamList = new List<IRandomAccessStream>();
             DisplayImages = new ObservableCollection<WriteableBitmap>();
-            AlertDisplayImages = new ObservableCollection<WriteableBitmap>();
+            AlertDisplayImages = new ObservableCollection<AlertDisplayImageModel>();
 
-            UpdateSettingsCommand = new CommandHandler(UpdateSettingsExecuted, true);
-            RunTestsCommand = new CommandHandler(RunTestsExecuted, true);
-            SaveImageCommand = new CommandHandler(SaveImageExecuted, true);
+            RunTestsCommand = new CommandHandler(RunTestsExecuted, CanExecuteRunTest);
+            SaveImageCommand = new CommandHandler(SaveImageExecuted, CanExecuteSaveImage);
+            UpdateSettingsCommand = new CommandHandler(UpdateSettingsExecuted, CanExecuteUpdateSettings);
         }
 
-        public async Task<bool> FileExists(string fileName)
+        #endregion
+
+        #region CanExecute functions
+
+        public bool CanExecuteUpdateSettings()
         {
-            var item = await ApplicationData.Current.LocalFolder.TryGetItemAsync(fileName);
-            return item != null;
+            return true;
         }
 
-        DispatcherTimer baselineTimer = new DispatcherTimer();
-
-        /// <summary>
-        /// Sets up the application and initializes the camera.
-        /// </summary>
-        public async void Setup(CaptureElement captureElement)
+        public bool CanExecuteSaveImage()
         {
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            if (await FileExists("config.json"))
-            {
-                StorageFile sampleFile = await storageFolder.GetFileAsync("config.json");
-                string file = await FileIO.ReadTextAsync(sampleFile);
-                ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(file);
-            }
-            else
-            {
-                StorageFile sampleFile = await storageFolder.CreateFileAsync("config.json", CreationCollisionOption.ReplaceExisting);
-                string settingsJson = "{\"smtpSettings\":{\"smtpRelay\":\"\",\"smtpPort\":465,\"useSSL\":true,\"smtpUserName\":\"\",\"smtpPassword\":\"\",\"recipient\":\"\",},\"appConfig\":{\"sendEmails\":false,\"captureDelay\":300,\"alertDelay\":2,\"alertThreshold\":1,\"pixelDelta\":.3,\"imageDelta\":3,}}";
-                await FileIO.WriteTextAsync(sampleFile, settingsJson);
-
-                ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(settingsJson);
-            }
-
-            Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
-
-            await MediaCaptureElement.InitializeAsync();
-
-            captureElement.Source = MediaCaptureElement;
-
-            displayRequest.RequestActive();
-
-            await MediaCaptureElement.StartPreviewAsync();
-
-            baselineTimer.Interval = new TimeSpan(0, 0, 10);
-            baselineTimer.Tick += BaselineTimer_Tick;
-            baselineTimer.Start();
-
-            captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
-            captureTimer.Tick += CaptureTimer_Tick;
+            return true;
         }
-
-        private void CaptureTimer_Tick(object sender, object e)
+        
+        public bool CanExecuteRunTest()
         {
-            TakePhoto();
+            return true;
         }
 
-        private void BaselineTimer_Tick(object sender, object e)
-        {
-            if(captureTimer == null)
-            {
-                return;
-            }
+        #endregion
 
-            if (captureTimer.IsEnabled)
-            {
-                captureTimer.Stop();
-            }
-
-            CaptureBaseLineImage();
-            captureTimer.Start();
-        }
+        #region Executed functions
 
         private async void SaveImageExecuted()
-        {  
+        {
             if (SelectedAlertImage != null)
             {
                 FileSavePicker picker = new FileSavePicker();
@@ -207,6 +199,163 @@ namespace MotionDetector.ViewModels
             StorageFile sampleFile = await storageFolder.GetFileAsync("config.json");
             await FileIO.WriteTextAsync(sampleFile, settingsJson);
             Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
+        }
+
+        /// <summary>
+        /// Tests the systems capture and email functionality.
+        /// </summary>
+        /// <param name="sender">Sending button</param>
+        /// <param name="e">Button args</param>
+        private async void RunTestsExecuted()
+        {
+            try
+            {
+                if (captureTimer.IsEnabled)
+                {
+                    captureTimer.Stop();
+                }
+
+                IsNotRunningTest = false;
+                var stream = new InMemoryRandomAccessStream();
+                await MediaCaptureElement.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
+                await Task.Delay(10);
+                List<IRandomAccessStream> streamTestList = new List<IRandomAccessStream>() { stream };
+                await SendAlertEmail(streamTestList, true);
+                IsNotRunningTest = true;
+                captureTimer.Start();
+            }
+            catch (Exception) { /*Working with hardware has a lot of exception cases.... nom nom nom*/}
+
+        }
+
+        #endregion
+
+        #region Public Functions
+
+        /// <summary>
+        /// Sets up the application and initializes the camera.
+        /// </summary>
+        public async void Setup(CaptureElement captureElement)
+        {
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            if (await FileExists("config.json"))
+            {
+                StorageFile sampleFile = await storageFolder.GetFileAsync("config.json");
+                string file = await FileIO.ReadTextAsync(sampleFile);
+                ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(file);
+            }
+            else
+            {
+                StorageFile sampleFile = await storageFolder.CreateFileAsync("config.json", CreationCollisionOption.ReplaceExisting);
+                string settingsJson = "{\"smtpSettings\":{\"smtpRelay\":\"\",\"smtpPort\":465,\"useSSL\":true,\"smtpUserName\":\"\",\"smtpPassword\":\"\",\"recipient\":\"\",},\"appConfig\":{\"sendEmails\":false,\"captureDelay\":300,\"alertDelay\":2,\"alertThreshold\":1,\"pixelDelta\":.3,\"imageDelta\":3,}}";
+                await FileIO.WriteTextAsync(sampleFile, settingsJson);
+
+                ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(settingsJson);
+            }
+
+            Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
+
+            ConfigurationSettings.SmtpSettings.PropertyChanged += SmtpSettings_PropertyChanged;
+
+            await MediaCaptureElement.InitializeAsync();
+
+            try
+            {
+                captureElement.Source = MediaCaptureElement;
+            }
+            catch (Exception)
+            {
+
+            }
+
+            displayRequest.RequestActive();
+
+            await MediaCaptureElement.StartPreviewAsync();
+
+            baselineTimer.Interval = new TimeSpan(0, 0, 10);
+            baselineTimer.Tick += OnBaselineTimerTick;
+            baselineTimer.Start();
+
+            captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
+            captureTimer.Tick += OnCaptureTimerTick;
+        }
+
+        public async Task<bool> Dispose()
+        {
+
+            await MediaCaptureElement.StopPreviewAsync();
+            MediaCaptureElement.Dispose();
+            MediaCaptureElement = null;
+            baselineImages = null;
+            captureTimer.Stop();
+
+            baselineTimer.Tick -= OnBaselineTimerTick;
+            captureTimer.Tick -= OnCaptureTimerTick;
+            delayTimer.Tick -= OnDelayTimerTick;
+
+            displayRequest = null;
+            streamList = null;
+            DisplayImages = null;
+            AlertDisplayImages = null;
+
+            UpdateSettingsCommand = null;
+            RunTestsCommand = null;
+            SaveImageCommand = null;
+            return true;
+        }
+
+        public void UpdateSettings()
+        {
+            UpdateSettingsExecuted();
+        }
+
+        #endregion
+
+        #region Private Functions
+
+        private void SmtpSettings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "PreferredSmtpServer")
+            {
+                switch (ConfigurationSettings.SmtpSettings.PreferredSmtpServer)
+                {
+                    case ("Gmail"):
+                        ConfigurationSettings.SmtpSettings.SmtpServer = "smtp.gmail.com";
+                        ConfigurationSettings.SmtpSettings.SmtpPort = 465;
+                        break;
+                    case ("Yahoo"):
+                        ConfigurationSettings.SmtpSettings.SmtpServer = "smtp.mail.yahoo.com";
+                        ConfigurationSettings.SmtpSettings.SmtpPort = 465;
+                        break;
+                }
+            }
+        }
+
+        private async Task<bool> FileExists(string fileName)
+        {
+            var item = await ApplicationData.Current.LocalFolder.TryGetItemAsync(fileName);
+            return item != null;
+        }
+
+        private void OnCaptureTimerTick(object sender, object e)
+        {
+            TakePhoto();
+        }
+
+        private void OnBaselineTimerTick(object sender, object e)
+        {
+            if (captureTimer == null)
+            {
+                return;
+            }
+
+            if (captureTimer.IsEnabled)
+            {
+                captureTimer.Stop();
+            }
+
+            CaptureBaseLineImage();
+            captureTimer.Start();
         }
 
         /// <summary>
@@ -247,43 +396,6 @@ namespace MotionDetector.ViewModels
         }
 
         /// <summary>
-        /// Tests the systems capture and email functionality.
-        /// </summary>
-        /// <param name="sender">Sending button</param>
-        /// <param name="e">Button args</param>
-        private async void RunTestsExecuted()
-        {
-            if (captureTimer.IsEnabled)
-            {
-                captureTimer.Stop();
-            }
-
-            var stream = new InMemoryRandomAccessStream();
-            await MediaCaptureElement.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
-            await Task.Delay(10);
-            List<IRandomAccessStream> streamTestList = new List<IRandomAccessStream>() { stream };
-            await SendAlertEmail(streamTestList, true);
-
-            captureTimer.Start();
-        }
-
-        /// <summary>
-        /// Orders the capture of a baseline image.
-        /// </summary>
-        /// <param name="sender">Sending button</param>
-        /// <param name="e">Button args</param>
-        private void BaseLineClicked(object sender, RoutedEventArgs e)
-        {
-            if (captureTimer.IsEnabled)
-            {
-                captureTimer.Stop();
-            }
-            CaptureBaseLineImage();
-            captureTimer.Start();
-        }
-
-        DispatcherTimer delayTimer = new DispatcherTimer();
-        /// <summary>
         /// Captures a photo and sends it off for analysis 
         /// </summary>
         private async void TakePhoto()
@@ -308,12 +420,12 @@ namespace MotionDetector.ViewModels
 
                     WriteableBitmap writeableBitmap = new WriteableBitmap(softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);
                     softwareBitmap.CopyToBuffer(writeableBitmap.PixelBuffer);
-                    AlertDisplayImages.Add(writeableBitmap);
+                    AlertDisplayImages.Add(new AlertDisplayImageModel() { AlertDisplayImage = writeableBitmap, AlertDisplayCaption = DateTime.Now.ToString() });
 
                     delayTimer.Interval = new TimeSpan(0, 0, ConfigurationSettings.AppConfig.AlertDelay);
 
                     captureTimer.Stop();
-                    delayTimer.Tick += DelayTimer_Tick;
+                    delayTimer.Tick += OnDelayTimerTick;
                     delayTimer.Start();
 
                     // It seems silly that we need to capture a second image but the first image that was captured isn't in a format that can
@@ -324,6 +436,9 @@ namespace MotionDetector.ViewModels
                     await Task.Delay(10);
                     streamList.Add(stream);
 
+                    if (AutoSaveAlertImages)
+                    {                    }
+
                     if (ConfigurationSettings.AppConfig.SendEmails && streamList.Count > ConfigurationSettings.AppConfig.AlertThreshold)
                     {
                         captureTimer.Stop();
@@ -332,13 +447,13 @@ namespace MotionDetector.ViewModels
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception error)
             {
                 // Getting random COM errors. Just eat it and continue. There's nothing I can do about this. 
             }
         }
 
-        private void DelayTimer_Tick(object sender, object e)
+        private void OnDelayTimerTick(object sender, object e)
         {
             DispatcherTimer delayTimer = sender as DispatcherTimer;
             if (delayTimer != null)
@@ -386,7 +501,7 @@ namespace MotionDetector.ViewModels
 
         private async Task<SmtpResult> SendAlertEmail(List<IRandomAccessStream> streams, bool isTest = false)
         {
-            using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpRelay,
+            using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
                                                       ConfigurationSettings.SmtpSettings.SmtpPort,
                                                       ConfigurationSettings.SmtpSettings.UseSSL,
                                                       ConfigurationSettings.SmtpSettings.SmtpUserName,
@@ -424,28 +539,6 @@ namespace MotionDetector.ViewModels
             }
         }
 
-        public async Task<bool> Dispose()
-        {
-            
-            await MediaCaptureElement.StopPreviewAsync();
-            MediaCaptureElement.Dispose();
-            MediaCaptureElement = null;
-            baselineImages = null;
-            captureTimer.Stop();
-
-            baselineTimer.Tick -= BaselineTimer_Tick;
-            captureTimer.Tick -= CaptureTimer_Tick;
-            delayTimer.Tick -= DelayTimer_Tick;
-
-            displayRequest = null;
-            streamList = null;
-            DisplayImages = null;
-            AlertDisplayImages = null;
-
-            UpdateSettingsCommand = null;
-            RunTestsCommand = null;
-            SaveImageCommand = null;
-            return true;
-        }
+        #endregion
     }
 }

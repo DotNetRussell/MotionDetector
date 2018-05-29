@@ -10,11 +10,18 @@ namespace MotionDetector.Models
         private string _smtpUserName;
         private string _smtpPassword;
         private string _recipient;
+        private string _preferredSmtpServer;
 
-        public string SmtpRelay
+        public string PreferredSmtpServer
+        {
+            get { return _preferredSmtpServer; }
+            set { _preferredSmtpServer = value; OnPropertyChanged("PreferredSmtpServer"); }
+        }
+
+        public string SmtpServer
         {
             get { return _smtpRelay; }
-            set { _smtpRelay = value; OnPropertyChanged("SmtpRelay"); }
+            set { _smtpRelay = value; OnPropertyChanged("SmtpServer"); }
         }
 
         public int SmtpPort

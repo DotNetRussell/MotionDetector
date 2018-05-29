@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/MotionDetector/MotionDetector/MotionDetector_StoreKey.pfx
+/MotionDetector/MotionDetector/Package.StoreAssociation.xml
+/MotionDetector/MotionDetector/_pkginfo.txt
+/MotionDetector/MotionDetector/AppPackages
+/MotionDetector/MotionDetector/BundleArtifacts

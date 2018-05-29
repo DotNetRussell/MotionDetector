@@ -44,8 +44,6 @@ namespace MotionDetector
 
         private void Setup()
         {
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
-
             viewModel = new MotionDetectorViewModel();
             this.DataContext = viewModel;
 
@@ -85,6 +83,20 @@ namespace MotionDetector
         private void OnSaveContextMenuClicked(object sender, RoutedEventArgs e)
         {
             viewModel.SaveImageCommand.Execute(sender);            
+        }
+
+        private void UpdateSettingsClosed(object sender, object e)
+        {
+            viewModel.UpdateSettings();
+        }
+
+        private async void TutorialButtonClicked(object sender, RoutedEventArgs e)
+        {
+            // The URI to launch
+            var uriBing = new Uri(@"http://www.bing.com");
+
+            // Launch the URI
+            await Windows.System.Launcher.LaunchUriAsync(uriBing);
         }
     }
 }

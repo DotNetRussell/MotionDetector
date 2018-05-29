@@ -22,6 +22,10 @@
     <AppIconSource>C:\Users\Anthony\Desktop\2.png</AppIconSource>
     <SplashScreenSource>C:\Users\Anthony\Desktop\2.png</SplashScreenSource>
     <PackageLogoSource>C:\Users\Anthony\Desktop\2.png</PackageLogoSource>
+    <AppxShowAllApps>False</AppxShowAllApps>
+    <AppxPackageIsForStore>True</AppxPackageIsForStore>
+    <AppxBuildConfigurationSelection>x86|x64|arm</AppxBuildConfigurationSelection>
+    <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
     <DeviceId>30F105C9-681E-420b-A277-7C086EAD8A4E</DeviceId>
@@ -29,5 +33,9 @@
     <RemoteDebugMachine>192.168.11.34</RemoteDebugMachine>
     <AuthenticationMode>Universal</AuthenticationMode>
     <RemoteDebugEnabled>true</RemoteDebugEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <DeviceId>5E4701F2-7B83-49E8-A957-7EF76386E745</DeviceId>
+    <UseEmulator>false</UseEmulator>
   </PropertyGroup>
 </Project>

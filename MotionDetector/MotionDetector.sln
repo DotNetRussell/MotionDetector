@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionDetector", "MotionDetector\MotionDetector.csproj", "{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasecodeLibrary", "..\UWPLibrary\BasecodeLibrary\BasecodeLibrary\BasecodeLibrary.csproj", "{5D802867-0FDC-49DE-BAF4-AB5628F6F72F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasecodeLibrary", "..\..\UWPLibrary\BasecodeLibrary\BasecodeLibrary\BasecodeLibrary.csproj", "{5D802867-0FDC-49DE-BAF4-AB5628F6F72F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RussLib", "..\RussLib\RussLib\RussLib.csproj", "{AD9FDAD7-C945-4E67-B1D6-CADBE27A45BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RussLib", "..\..\RussLib\RussLib\RussLib.csproj", "{AD9FDAD7-C945-4E67-B1D6-CADBE27A45BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +22,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|Any CPU.Build.0 = Debug|x86
+		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|Any CPU.Deploy.0 = Debug|x86
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|ARM.ActiveCfg = Debug|ARM
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|ARM.Build.0 = Debug|ARM
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|ARM.Deploy.0 = Debug|ARM
@@ -32,6 +34,8 @@ Global
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|x86.Build.0 = Debug|x86
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Debug|x86.Deploy.0 = Debug|x86
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Release|Any CPU.ActiveCfg = Release|x86
+		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Release|Any CPU.Build.0 = Release|x86
+		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Release|Any CPU.Deploy.0 = Release|x86
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Release|ARM.ActiveCfg = Release|ARM
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Release|ARM.Build.0 = Release|ARM
 		{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}.Release|ARM.Deploy.0 = Release|ARM
