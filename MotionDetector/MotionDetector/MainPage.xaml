@@ -8,6 +8,7 @@
     xmlns:converters="using:BasecodeLibrary.Converters"
     xmlns:baseCodeControls="using:BasecodeLibrary.Controls"
     mc:Ignorable="d"
+    NavigationCacheMode="Required"
     x:Name="mainPage"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -37,6 +38,14 @@
             </Border>
             <StackPanel Orientation="Horizontal"  Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button 
+                    Command="{Binding Path=RunTestsCommand}" 
+                    IsEnabled="{Binding Path=IsNotRunningTest, UpdateSourceTrigger=PropertyChanged}" 
+                    Margin="5" 
+                    FontSize="30"
+                    ToolTipService.ToolTip="Sends a single test image to the recipient's email" 
+                    Content="Smtp Test" />
+                <Button 
+                    Margin="5,0,0,0"
                     Click="OnAboutButtonClicked" >
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -45,138 +54,87 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
+
+                <Button ToolTipService.ToolTip="Tutorial" Click="TutorialButtonClicked" FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE897;" FontSize="40" />
                 <Button FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE713;" FontSize="40" >
                     <Button.Flyout>
-                        <Flyout>
-                            <ListView HorizontalAlignment="Center" SelectionMode="None" >
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Width="100" Grid.Column="0" VerticalAlignment="Center">Send Emails:</TextBlock>
-                                    <CheckBox TabIndex="0" ToolTipService.ToolTip="Toggles emailing of alerts on and off" Grid.Column="1" Width="200" IsChecked="{Binding Path=ConfigurationSettings.AppConfig.SendEmails,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"  />
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Width="100" Grid.Column="0" VerticalAlignment="Center">Smtp Relay:</TextBlock>
-                                    <TextBox TabIndex="1" ToolTipService.ToolTip="Sets the SMTP Server Relay" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.SmtpSettings.SmtpRelay, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"  />
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Width="100" Grid.Column="0" VerticalAlignment="Center">Smtp Port:</TextBlock>
-                                    <TextBox TabIndex="2" ToolTipService.ToolTip="Sets the SMTP server port" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.SmtpSettings.SmtpPort, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Width="100" Grid.Column="0" VerticalAlignment="Center">Use SSL:</TextBlock>
-                                    <CheckBox ToolTipService.ToolTip="Toggles SSL for the SMTP server on and off"  Grid.Column="1" IsChecked="{Binding Path=ConfigurationSettings.SmtpSettings.UseSSL, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"  />
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Smtp Username:</TextBlock>
-                                    <TextBox ToolTipService.ToolTip="Sets the SMTP server username" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.SmtpSettings.SmtpUserName, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Smtp Password:</TextBlock>
-                                    <PasswordBox ToolTipService.ToolTip="Sets the SMTP server password" Grid.Column="1" Password="{Binding Path=ConfigurationSettings.SmtpSettings.SmtpPassword, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Smtp Recipient:</TextBlock>
-                                    <TextBox ToolTipService.ToolTip="Sets the recipients email address for where alerts are sent" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.SmtpSettings.Recipient, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Capture Delay:</TextBlock>
-                                    <TextBox ToolTipService.ToolTip="The amount of time in milliseconds between each image being captured for test" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.AppConfig.CaptureDelay, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Alert Delay:</TextBlock>
-                                    <TextBox Grid.Column="1" ToolTipService.ToolTip="The delay in seconds after a alert image is taken to prevent many of the same image" Text="{Binding Path=ConfigurationSettings.AppConfig.AlertDelay, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Alert Threshold:</TextBlock>
-                                    <TextBox ToolTipService.ToolTip="How many images to take prior to emailing" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.AppConfig.AlertThreshold, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Pixel Delta:</TextBlock>
-                                    <TextBox ToolTipService.ToolTip="The delta between each pixel to trigger an alert" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.AppConfig.PixelDelta, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <Grid 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock TextWrapping="Wrap" Width="100" Grid.Column="0" VerticalAlignment="Center">Image Delta:</TextBlock>
-                                    <TextBox ToolTipService.ToolTip="The delta between each image, in percent, to trigger an alert" Grid.Column="1" Text="{Binding Path=ConfigurationSettings.AppConfig.ImageDelta, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                                </Grid>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Command="{Binding Path=UpdateSettingsCommand}" Margin="5" Content="Update Settings"/>
-                                    <Button Command="{Binding Path=RunTestsCommand}" Margin="5" ToolTipService.ToolTip="Sends a single test image to the recipient's email" Content="RUN TEST" />
-                                </StackPanel>
-                            </ListView>
-                        </Flyout>
+                        <baseCodeControls:SettingsFlyout Closed="UpdateSettingsClosed">
+                            <baseCodeControls:SettingItem 
+                                Label="Send Emails:" 
+                                SettingType="_bool" 
+                                BindingPath="ConfigurationSettings.AppConfig.SendEmails"/>
+                            <baseCodeControls:SettingItemSelector Label="Preconfigured SMTP Servers" BindingPath="ConfigurationSettings.SmtpSettings.PreferredSmtpServer">
+                                <x:String>Gmail</x:String>
+                                <x:String>Yahoo</x:String>
+                                <x:String>Custom</x:String>
+                            </baseCodeControls:SettingItemSelector>
+                            <baseCodeControls:SettingItem 
+                                Label="Smtp Server:" 
+                                SettingType="_string" 
+                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpServer" />
+                            <baseCodeControls:SettingItem
+                                Label="Smtp Port:"
+                                SettingType="_string"
+                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpPort" />
+                            <baseCodeControls:SettingItem
+                                Label="Use SSL:"
+                                SettingType="_bool"
+                                BindingPath="ConfigurationSettings.SmtpSettings.UseSSL" 
+                                ToolTipService.ToolTip="Toggles SSL for the SMTP server on and off"/>
+                            <baseCodeControls:SettingItem
+                                Label="Smtp Username:"
+                                SettingType="_string"
+                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpUserName" 
+                                ToolTipService.ToolTip="Sets the SMTP server username"/>
+                            <baseCodeControls:SettingItem
+                                Label="Smtp Password:"
+                                SettingType="_password"
+                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpPassword" 
+                                ToolTipService.ToolTip="Sets the SMTP server password"/>
+                            <baseCodeControls:SettingItem
+                                Label="Smtp Recipient:"
+                                SettingType="_string"
+                                BindingPath="ConfigurationSettings.SmtpSettings.Recipient" 
+                                ToolTipService.ToolTip="Sets the recipients email address for where alerts are sent"/>
+                            <baseCodeControls:SettingItem
+                                Label="Capture Delay:"
+                                SettingType="_int"
+                                BindingPath="ConfigurationSettings.AppConfig.CaptureDelay" 
+                                ToolTipService.ToolTip="The amount of time in milliseconds between each image being captured for test"/>
+                            <baseCodeControls:SettingItem
+                                Label="Alert Delay:"
+                                SettingType="_int"
+                                BindingPath="ConfigurationSettings.AppConfig.AlertDelay" 
+                                ToolTipService.ToolTip="The delay in seconds after a alert image is taken to prevent many of the same image"/>
+                            <baseCodeControls:SettingItem
+                                Label="Alert Threshold:"
+                                SettingType="_int"
+                                BindingPath="ConfigurationSettings.AppConfig.AlertThreshold" 
+                                ToolTipService.ToolTip="How many images to take prior to emailing"/>
+                            <!--<baseCodeControls:SettingItem
+                                Label="Auto Save Alert Image:"
+                                SettingType="_bool"
+                                BindingPath="AutoSaveAlertImages"
+                                ToolTipService.ToolTip="Automatically save each alert image to the local harddrive"/>
+                            <baseCodeControls:SettingItem
+                                Label="Auto Save Location:"
+                                SettingType="_string"
+                                BindingPath="AutoSaveImageLocation"
+                                ToolTipService.ToolTip="The path to the location you which to save your alert images" />-->
+                            <baseCodeControls:SettingItem
+                                Label="Pixel Delta:"
+                                SettingType="_double"
+                                BindingPath="ConfigurationSettings.AppConfig.PixelDelta" 
+                                ToolTipService.ToolTip="The delta between each pixel to trigger an alert"/>
+                            <baseCodeControls:SettingItem
+                                Label="Image Delta:"
+                                SettingType="_int"
+                                BindingPath="ConfigurationSettings.AppConfig.ImageDelta" 
+                                ToolTipService.ToolTip="The delta between each image, in percent, to trigger an alert"/>
+                        </baseCodeControls:SettingsFlyout>
                     </Button.Flyout>
                 </Button>
+
             </StackPanel>
             <Border BorderBrush="White" BorderThickness="2" HorizontalAlignment="Stretch" Grid.RowSpan="2">
                 <Pivot>
@@ -205,10 +163,13 @@
                                         </Setter.Value>
                                     </Setter>
                                 </Style>
-                            </ListView.Resources>                            
+                            </ListView.Resources>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Image Source="{Binding}"/>
+                                    <StackPanel>
+                                        <Image Source="{Binding Path=AlertDisplayImage}"/>
+                                        <TextBlock Text="{Binding Path=AlertDisplayCaption}" />
+                                    </StackPanel>                                    
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
