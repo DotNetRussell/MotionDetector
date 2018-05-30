@@ -237,6 +237,16 @@ namespace MotionDetector.ViewModels
         /// </summary>
         public async void Setup(CaptureElement captureElement)
         {
+            Windows.System.Display.DisplayRequest _displayRequest = null;
+            //create the request instance if needed
+            if (_displayRequest == null)
+                _displayRequest = new Windows.System.Display.DisplayRequest();
+
+            //make request to put in active state
+            _displayRequest.RequestActive();
+
+
+
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             if (await FileExists("config.json"))
             {
@@ -247,7 +257,7 @@ namespace MotionDetector.ViewModels
             else
             {
                 StorageFile sampleFile = await storageFolder.CreateFileAsync("config.json", CreationCollisionOption.ReplaceExisting);
-                string settingsJson = "{\"smtpSettings\":{\"smtpRelay\":\"\",\"smtpPort\":465,\"useSSL\":true,\"smtpUserName\":\"\",\"smtpPassword\":\"\",\"recipient\":\"\",},\"appConfig\":{\"sendEmails\":false,\"captureDelay\":300,\"alertDelay\":2,\"alertThreshold\":1,\"pixelDelta\":.3,\"imageDelta\":3,}}";
+                string settingsJson = "{\"smtpSettings\":{\"smtpRelay\":\"\",\"smtpPort\":465,\"useSSL\":true,\"smtpUserName\":\"\",\"smtpPassword\":\"\",\"recipient\":\"\",},\"appConfig\":{\"sendEmails\":false,\"captureDelay\":500,\"alertDelay\":2,\"alertThreshold\":2,\"pixelDelta\":.3,\"imageDelta\":7,}}";
                 await FileIO.WriteTextAsync(sampleFile, settingsJson);
 
                 ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(settingsJson);

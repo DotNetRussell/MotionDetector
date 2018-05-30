@@ -38,13 +38,6 @@
             </Border>
             <StackPanel Orientation="Horizontal"  Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button 
-                    Command="{Binding Path=RunTestsCommand}" 
-                    IsEnabled="{Binding Path=IsNotRunningTest, UpdateSourceTrigger=PropertyChanged}" 
-                    Margin="5" 
-                    FontSize="30"
-                    ToolTipService.ToolTip="Sends a single test image to the recipient's email" 
-                    Content="Smtp Test" />
-                <Button 
                     Margin="5,0,0,0"
                     Click="OnAboutButtonClicked" >
                     <Button.Content>
@@ -59,11 +52,23 @@
                 <Button FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE713;" FontSize="40" >
                     <Button.Flyout>
                         <baseCodeControls:SettingsFlyout Closed="UpdateSettingsClosed">
+                            <baseCodeControls:SettingsFlyout.Buttons>
+                                <Button 
+                                    Command="{Binding Path=RunTestsCommand}" 
+                                    IsEnabled="{Binding Path=IsNotRunningTest, UpdateSourceTrigger=PropertyChanged}" 
+                                
+                                    ToolTipService.ToolTip="Sends a single test image to the recipient's email" 
+                                    Content="Smtp Test" />
+                            </baseCodeControls:SettingsFlyout.Buttons>
                             <baseCodeControls:SettingItem 
                                 Label="Send Emails:" 
                                 SettingType="_bool" 
-                                BindingPath="ConfigurationSettings.AppConfig.SendEmails"/>
-                            <baseCodeControls:SettingItemSelector Label="Preconfigured SMTP Servers" BindingPath="ConfigurationSettings.SmtpSettings.PreferredSmtpServer">
+                                BindingPath="ConfigurationSettings.AppConfig.SendEmails"
+                                ToolTip="Toggles whether or not to send emails when alert threshold is hit"/>
+                            <baseCodeControls:SettingItemSelector 
+                                Label="Preconfigured SMTP Servers" 
+                                BindingPath="ConfigurationSettings.SmtpSettings.PreferredSmtpServer"
+                                ToolTip="Sets the preconfigured Smtp server or custom Smtp server">
                                 <x:String>Gmail</x:String>
                                 <x:String>Yahoo</x:String>
                                 <x:String>Custom</x:String>
@@ -71,46 +76,48 @@
                             <baseCodeControls:SettingItem 
                                 Label="Smtp Server:" 
                                 SettingType="_string" 
-                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpServer" />
+                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpServer"
+                                ToolTip="Sets the url for the Smtp server"/>
                             <baseCodeControls:SettingItem
                                 Label="Smtp Port:"
                                 SettingType="_string"
-                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpPort" />
+                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpPort"
+                                ToolTip="Sets the port for the Smtp server"/>
                             <baseCodeControls:SettingItem
                                 Label="Use SSL:"
                                 SettingType="_bool"
                                 BindingPath="ConfigurationSettings.SmtpSettings.UseSSL" 
-                                ToolTipService.ToolTip="Toggles SSL for the SMTP server on and off"/>
+                                ToolTip="Toggles SSL for the SMTP server on and off"/>
                             <baseCodeControls:SettingItem
                                 Label="Smtp Username:"
                                 SettingType="_string"
                                 BindingPath="ConfigurationSettings.SmtpSettings.SmtpUserName" 
-                                ToolTipService.ToolTip="Sets the SMTP server username"/>
+                                ToolTip="Sets the SMTP server username"/>
                             <baseCodeControls:SettingItem
                                 Label="Smtp Password:"
                                 SettingType="_password"
                                 BindingPath="ConfigurationSettings.SmtpSettings.SmtpPassword" 
-                                ToolTipService.ToolTip="Sets the SMTP server password"/>
+                                ToolTip="Sets the SMTP server password"/>
                             <baseCodeControls:SettingItem
                                 Label="Smtp Recipient:"
                                 SettingType="_string"
                                 BindingPath="ConfigurationSettings.SmtpSettings.Recipient" 
-                                ToolTipService.ToolTip="Sets the recipients email address for where alerts are sent"/>
+                                ToolTip="Sets the recipients email address for where alerts are sent"/>
                             <baseCodeControls:SettingItem
                                 Label="Capture Delay:"
                                 SettingType="_int"
                                 BindingPath="ConfigurationSettings.AppConfig.CaptureDelay" 
-                                ToolTipService.ToolTip="The amount of time in milliseconds between each image being captured for test"/>
+                                ToolTip="The amount of time in milliseconds between each image being captured for test"/>
                             <baseCodeControls:SettingItem
                                 Label="Alert Delay:"
                                 SettingType="_int"
                                 BindingPath="ConfigurationSettings.AppConfig.AlertDelay" 
-                                ToolTipService.ToolTip="The delay in seconds after a alert image is taken to prevent many of the same image"/>
+                                ToolTip="The delay in seconds after a alert image is taken to prevent many of the same image"/>
                             <baseCodeControls:SettingItem
                                 Label="Alert Threshold:"
                                 SettingType="_int"
                                 BindingPath="ConfigurationSettings.AppConfig.AlertThreshold" 
-                                ToolTipService.ToolTip="How many images to take prior to emailing"/>
+                                ToolTip="How many images to take prior to emailing"/>
                             <!--<baseCodeControls:SettingItem
                                 Label="Auto Save Alert Image:"
                                 SettingType="_bool"
@@ -125,12 +132,12 @@
                                 Label="Pixel Delta:"
                                 SettingType="_double"
                                 BindingPath="ConfigurationSettings.AppConfig.PixelDelta" 
-                                ToolTipService.ToolTip="The delta between each pixel to trigger an alert"/>
+                                ToolTip="The delta between each pixel to trigger an alert"/>
                             <baseCodeControls:SettingItem
                                 Label="Image Delta:"
                                 SettingType="_int"
                                 BindingPath="ConfigurationSettings.AppConfig.ImageDelta" 
-                                ToolTipService.ToolTip="The delta between each image, in percent, to trigger an alert"/>
+                                ToolTip="The delta between each image, in percent, to trigger an alert"/>
                         </baseCodeControls:SettingsFlyout>
                     </Button.Flyout>
                 </Button>
