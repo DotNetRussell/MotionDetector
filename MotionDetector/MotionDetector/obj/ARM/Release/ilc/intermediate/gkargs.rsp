@@ -1,7 +1,0 @@
-/In:"C:\Users\Anthony\Source\Repos\TestIoTApp\TestIoTApp\obj\ARM\Release\ilc\in"
-/Lib:"C:\Users\Anthony\Source\Repos\TestIoTApp\TestIoTApp\obj\ARM\Release\ilc\in"
-/Lib:"C:\Program Files (x86)\Microsoft SDKs\UWPNuGetPackages\microsoft.net.native.compiler\1.7.3\tools\ARM\ilc\lib\Private"
-/WinMD:"C:\Users\Anthony\Source\Repos\TestIoTApp\TestIoTApp\obj\ARM\Release\ilc\in\WinMetadata\Windows.winmd"
-/VSTelemetrySessionSettings:"{"AppId":1001,"AppInsightsInstrumentationKey":"f144292e-e3b2-4011-ac90-20e5c03fbce5","AsimovInstrumentationKey":"AIF-312cbd79-9dbb-4c48-a7da-3cc2a931cb70","HostName":"Dev14","Id":"54dbc519-9f25-479a-899f-33103fff2e8a","IsOptedIn":true,"ProcessStartTime":636628109216909915,"UserId":"d7ef6289-f0c1-4159-979f-59d7b87de60c"}"
-/RdXmlPath:"C:\Program Files (x86)\Microsoft SDKs\UWPNuGetPackages\microsoft.net.native.compiler\1.7.3\tools\LibraryXML"
-/RunOnlyPreDR

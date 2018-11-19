@@ -1,1 +1,0 @@
-C:\Users\Anthony\Source\Repos\TestIoTApp\TestIoTApp\TestIoTApp.csproj;arm

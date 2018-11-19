@@ -1,1 +1,0 @@
-C:\Users\Anthony\Source\Repos\TestIoTApp\TestIoTApp\MotionDetector.csproj;arm

@@ -1,2 +1,0 @@
-C:\Users\Anthony\Source\Repos\MotionDetector\MotionDetector\MotionDetector.csproj;x86
-C:\Users\Anthony\Source\Repos\UWPLibrary\BasecodeLibrary\BasecodeLibrary\BasecodeLibrary.csproj;x86
