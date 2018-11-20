@@ -11,6 +11,20 @@ namespace MotionDetector.Models
         private int _alertThreshold;
         private double _pixelDelta;
         private int _imageDelta;
+        private double _darkShiftThreshold;
+        private int _configVersion;
+
+        public int ConfigVersion
+        {
+            get { return _configVersion; }
+            set { _configVersion = value; }
+        }
+
+        public double DarkShiftThreshold
+        {
+            get { return _darkShiftThreshold; }
+            set { _darkShiftThreshold = value; OnPropertyChanged("DarkShiftThreshold"); }
+        }
 
         public bool SendEmails
         {

@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -32,6 +33,7 @@ namespace MotionDetector.ViewModels
         #region Bound Properties
 
         #region private backers
+        private int configVersion = 2;
         private bool _isAlert;
         private int _sensitivity;
         private bool _autoSaveAlertImages;
@@ -194,10 +196,7 @@ namespace MotionDetector.ViewModels
 
         private async void UpdateSettingsExecuted()
         {
-            string settingsJson = JsonConvert.SerializeObject(ConfigurationSettings);
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            StorageFile sampleFile = await storageFolder.GetFileAsync("config.json");
-            await FileIO.WriteTextAsync(sampleFile, settingsJson);
+            SaveManager.SaveJsonFile("config.json", ConfigurationSettings);
             Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
         }
 
@@ -245,22 +244,35 @@ namespace MotionDetector.ViewModels
             //make request to put in active state
             _displayRequest.RequestActive();
 
-
-
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            if (await FileExists("config.json"))
+            ConfigModel config = new ConfigModel()
             {
-                StorageFile sampleFile = await storageFolder.GetFileAsync("config.json");
-                string file = await FileIO.ReadTextAsync(sampleFile);
-                ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(file);
+                SmtpSettings = new SmtpSettingsModel()
+                {
+                    SmtpPort = 465,
+                    UseSSL = true,
+                },
+                AppConfig = new AppConfigModel()
+                {
+                    SendEmails = false,
+                    ImageDelta = 7,
+                    PixelDelta = .3,
+                    AlertThreshold = 2,
+                    AlertDelay = 2,
+                    CaptureDelay = 500,
+                    DarkShiftThreshold = 70
+                }
+            };
+
+            if (!await SaveManager.FileExists("config.json"))
+            {
+                SaveManager.SaveJsonFile("config.json", config);
             }
-            else
-            {
-                StorageFile sampleFile = await storageFolder.CreateFileAsync("config.json", CreationCollisionOption.ReplaceExisting);
-                string settingsJson = "{\"smtpSettings\":{\"smtpRelay\":\"\",\"smtpPort\":465,\"useSSL\":true,\"smtpUserName\":\"\",\"smtpPassword\":\"\",\"recipient\":\"\",},\"appConfig\":{\"sendEmails\":false,\"captureDelay\":500,\"alertDelay\":2,\"alertThreshold\":2,\"pixelDelta\":.3,\"imageDelta\":7,}}";
-                await FileIO.WriteTextAsync(sampleFile, settingsJson);
 
-                ConfigurationSettings = JsonConvert.DeserializeObject<ConfigModel>(settingsJson);
+            ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
+
+            if (ConfigurationSettings.AppConfig.ConfigVersion < this.configVersion)
+            {
+                SaveManager.SaveJsonFile("config.json", config);
             }
 
             Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
@@ -341,17 +353,11 @@ namespace MotionDetector.ViewModels
             }
         }
 
-        private async Task<bool> FileExists(string fileName)
-        {
-            var item = await ApplicationData.Current.LocalFolder.TryGetItemAsync(fileName);
-            return item != null;
-        }
-
         private void OnCaptureTimerTick(object sender, object e)
         {
             TakePhoto();
         }
-
+        
         private void OnBaselineTimerTick(object sender, object e)
         {
             if (captureTimer == null)
@@ -367,7 +373,7 @@ namespace MotionDetector.ViewModels
             CaptureBaseLineImage();
             captureTimer.Start();
         }
-
+        
         /// <summary>
         /// Will capture a single image and store it in the baseline images list. Each image will be used to determine if we have an alert or not.
         /// </summary>
@@ -380,6 +386,8 @@ namespace MotionDetector.ViewModels
 
                 CapturedPhoto capturedPhoto = await lowLagCapture.CaptureAsync();
                 SoftwareBitmap softwareBitmap = capturedPhoto.Frame.SoftwareBitmap;
+
+                await lowLagCapture.FinishAsync();
 
                 WriteableBitmap writeableBitmap = new WriteableBitmap(softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);
                 softwareBitmap.CopyToBuffer(writeableBitmap.PixelBuffer);
@@ -396,7 +404,6 @@ namespace MotionDetector.ViewModels
                 baselineImages.Add(imageBytes);
                 DisplayImages.Add(writeableBitmap);
 
-                await lowLagCapture.FinishAsync();
             }
             catch (Exception)
             {
@@ -417,8 +424,8 @@ namespace MotionDetector.ViewModels
 
                 CapturedPhoto capturedPhoto = await lowLagCapture.CaptureAsync();
                 SoftwareBitmap softwareBitmap = capturedPhoto.Frame.SoftwareBitmap;
-
                 await lowLagCapture.FinishAsync();
+
 
                 byte[] imageBytes = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
                 softwareBitmap.CopyToBuffer(imageBytes.AsBuffer());
@@ -457,7 +464,7 @@ namespace MotionDetector.ViewModels
                     }
                 }
             }
-            catch (Exception error)
+            catch (Exception)
             {
                 // Getting random COM errors. Just eat it and continue. There's nothing I can do about this. 
             }
@@ -474,6 +481,23 @@ namespace MotionDetector.ViewModels
         }
 
         /// <summary>
+        /// Determins if the image being examined is a dark image. If it is, then true will be returned
+        /// </summary>
+        /// <param name="testImage">The image being examined</param>
+        /// <returns>Checks if image is dark</returns>
+        private bool CheckIfImageIsDarkShifted(byte[] testImage)
+        {
+            double total = 0;
+            foreach (byte image in testImage)
+            {
+                total += Convert.ToDouble(image);
+            }
+            double average = total / testImage.Length;
+
+            return average < ConfigurationSettings.AppConfig.DarkShiftThreshold;
+        }
+
+        /// <summary>
         /// Uses the parameters set in the config file to test the image passed in against all baseline images. If any of the baseline
         /// images match, then false is returned. Otherwise true is returned.
         /// </summary>
@@ -481,7 +505,9 @@ namespace MotionDetector.ViewModels
         /// <returns>Returns true if none of the baseline images match the image passed in.</returns>
         private bool CheckForMotion(byte[] testImage)
         {
+            double configPixelDelta = ConfigurationSettings.AppConfig.PixelDelta;
             List<bool> baseLineChecks = new List<bool>();
+
             foreach (byte[] baseline in baselineImages)
             {
 
@@ -490,16 +516,19 @@ namespace MotionDetector.ViewModels
                 for (int x = 0; x < baseline.Length; x++)
                 {
                     double pixelDelta = Convert.ToDouble(baseline[x]) / Convert.ToDouble(testImage[x]);
-                    if (pixelDelta > (1.0 + ConfigurationSettings.AppConfig.PixelDelta) || pixelDelta < (1.0 - ConfigurationSettings.AppConfig.PixelDelta))
+                    if (pixelDelta > (1.0 + configPixelDelta) 
+                        || pixelDelta < (1.0 - configPixelDelta))
                     {
                         changedPixels++;
                     }
                 }
 
-                baseLineChecks.Add(Convert.ToDouble(changedPixels) / Convert.ToDouble(baseline.Length) > (Convert.ToDouble(Sensitivity) / 100d));
+                baseLineChecks.Add(Convert.ToDouble(changedPixels) / Convert.ToDouble(baseline.Length) 
+                    > (Convert.ToDouble(Sensitivity) / 100d));
             }
 
-            if (!baseLineChecks.Contains(false))
+            if (!baseLineChecks.Contains(false) 
+                    && !CheckIfImageIsDarkShifted(testImage))
             {
                 return IsAlert = true;
             }

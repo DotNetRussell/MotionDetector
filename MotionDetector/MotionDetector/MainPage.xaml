@@ -138,6 +138,11 @@
                                 SettingType="_int"
                                 BindingPath="ConfigurationSettings.AppConfig.ImageDelta" 
                                 ToolTip="The delta between each image, in percent, to trigger an alert"/>
+                            <baseCodeControls:SettingItem
+                                Label="Night Mode Threshold"
+                                SettingType="_int"
+                                BindingPath="ConfigurationSettings.AppConfig.DarkShiftThreshold"
+                                ToolTip="0-255, The higher the number the less alerts you'll have when it gets dark. (Recommend &lt; 100)"/>
                         </baseCodeControls:SettingsFlyout>
                     </Button.Flyout>
                 </Button>
