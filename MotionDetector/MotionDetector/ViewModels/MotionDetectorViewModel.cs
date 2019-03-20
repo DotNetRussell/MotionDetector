@@ -243,6 +243,10 @@ namespace MotionDetector.ViewModels
                 await SaveManager.SaveJsonFile("config.json", config);
             }
 
+            // Apparently there's an edge case where if you create a config file and then attempt to read it right away,
+            // it won't exist yet. Doing this little wait and see check fixes it. This also only happens on first run.
+            while(!await SaveManager.FileExists("config.json")) { continue; }
+
             ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
 
             if (ConfigurationSettings.AppConfig.ConfigVersion < this.configVersion)
@@ -252,7 +256,6 @@ namespace MotionDetector.ViewModels
 
             Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
             
-
             try
             {
                 await MediaCaptureElement.InitializeAsync();
