@@ -21,6 +21,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.System.Display;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
@@ -38,7 +39,6 @@ namespace MotionDetector.ViewModels
         private int _sensitivity;
         private bool _autoSaveAlertImages;
         private List<byte[]> baselineImages;
-        private bool _isNotRunningTest = true;
         private string _autoSaveImageLocation;
         private ObservableCollection<WriteableBitmap> _displayImages;
         private ObservableCollection<AlertDisplayImageModel> _alertDisplayImages;
@@ -48,12 +48,6 @@ namespace MotionDetector.ViewModels
         {
             get { return _isAlert; }
             set { _isAlert = value; OnPropertyChanged("IsAlert"); }
-        }
-
-        public bool IsNotRunningTest
-        {
-            get { return _isNotRunningTest; }
-            set { _isNotRunningTest = value; OnPropertyChanged("IsNotRunningTest"); }
         }
 
         /// <summary>
@@ -100,8 +94,6 @@ namespace MotionDetector.ViewModels
         }
 
         #region Command Bindings
-        public ICommand UpdateSettingsCommand { get; set; }
-        public ICommand RunTestsCommand { get; set; }
         public ICommand SaveImageCommand { get; set; }
         #endregion
 
@@ -144,29 +136,19 @@ namespace MotionDetector.ViewModels
             DisplayImages = new ObservableCollection<WriteableBitmap>();
             AlertDisplayImages = new ObservableCollection<AlertDisplayImageModel>();
 
-            RunTestsCommand = new CommandHandler(RunTestsExecuted, CanExecuteRunTest);
             SaveImageCommand = new CommandHandler(SaveImageExecuted, CanExecuteSaveImage);
-            UpdateSettingsCommand = new CommandHandler(UpdateSettingsExecuted, CanExecuteUpdateSettings);
         }
 
         #endregion
 
         #region CanExecute functions
 
-        public bool CanExecuteUpdateSettings()
-        {
-            return true;
-        }
 
         public bool CanExecuteSaveImage()
         {
             return true;
         }
         
-        public bool CanExecuteRunTest()
-        {
-            return true;
-        }
 
         #endregion
 
@@ -193,13 +175,7 @@ namespace MotionDetector.ViewModels
                 }
             }
         }
-
-        private async void UpdateSettingsExecuted()
-        {
-            SaveManager.SaveJsonFile("config.json", ConfigurationSettings);
-            Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
-        }
-
+        
         /// <summary>
         /// Tests the systems capture and email functionality.
         /// </summary>
@@ -214,13 +190,11 @@ namespace MotionDetector.ViewModels
                     captureTimer.Stop();
                 }
 
-                IsNotRunningTest = false;
                 var stream = new InMemoryRandomAccessStream();
                 await MediaCaptureElement.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
                 await Task.Delay(10);
                 List<IRandomAccessStream> streamTestList = new List<IRandomAccessStream>() { stream };
-                await SendAlertEmail(streamTestList, true);
-                IsNotRunningTest = true;
+                await SendAlertEmail(streamTestList);
                 captureTimer.Start();
             }
             catch (Exception) { /*Working with hardware has a lot of exception cases.... nom nom nom*/}
@@ -259,47 +233,46 @@ namespace MotionDetector.ViewModels
                     AlertThreshold = 2,
                     AlertDelay = 2,
                     CaptureDelay = 500,
-                    DarkShiftThreshold = 70
+                    DarkShiftThreshold = 70,
+                    ConfigVersion = this.configVersion
                 }
             };
 
             if (!await SaveManager.FileExists("config.json"))
             {
-                SaveManager.SaveJsonFile("config.json", config);
+                await SaveManager.SaveJsonFile("config.json", config);
             }
 
             ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
 
             if (ConfigurationSettings.AppConfig.ConfigVersion < this.configVersion)
             {
-                SaveManager.SaveJsonFile("config.json", config);
+                await SaveManager.SaveJsonFile("config.json", config);
             }
 
             Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
-
-            ConfigurationSettings.SmtpSettings.PropertyChanged += SmtpSettings_PropertyChanged;
-
-            await MediaCaptureElement.InitializeAsync();
+            
 
             try
             {
+                await MediaCaptureElement.InitializeAsync();
                 captureElement.Source = MediaCaptureElement;
+                displayRequest.RequestActive();
+
+                await MediaCaptureElement.StartPreviewAsync();
+
+                baselineTimer.Interval = new TimeSpan(0, 0, 10);
+                baselineTimer.Tick += OnBaselineTimerTick;
+                baselineTimer.Start();
+
+                captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
+                captureTimer.Tick += OnCaptureTimerTick;
             }
             catch (Exception)
             {
-
+                MessageDialog dialog = new MessageDialog("There was an issue while finding and starting your camera. If this is a mistake, please reach out to the developer on Twitter @DotNetRussell or at Admin@DotNetRussell.com");
+                await dialog.ShowAsync();
             }
-
-            displayRequest.RequestActive();
-
-            await MediaCaptureElement.StartPreviewAsync();
-
-            baselineTimer.Interval = new TimeSpan(0, 0, 10);
-            baselineTimer.Tick += OnBaselineTimerTick;
-            baselineTimer.Start();
-
-            captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
-            captureTimer.Tick += OnCaptureTimerTick;
         }
 
         public async Task<bool> Dispose()
@@ -320,38 +293,14 @@ namespace MotionDetector.ViewModels
             DisplayImages = null;
             AlertDisplayImages = null;
 
-            UpdateSettingsCommand = null;
-            RunTestsCommand = null;
             SaveImageCommand = null;
             return true;
-        }
-
-        public void UpdateSettings()
-        {
-            UpdateSettingsExecuted();
         }
 
         #endregion
 
         #region Private Functions
 
-        private void SmtpSettings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if(e.PropertyName == "PreferredSmtpServer")
-            {
-                switch (ConfigurationSettings.SmtpSettings.PreferredSmtpServer)
-                {
-                    case ("Gmail"):
-                        ConfigurationSettings.SmtpSettings.SmtpServer = "smtp.gmail.com";
-                        ConfigurationSettings.SmtpSettings.SmtpPort = 465;
-                        break;
-                    case ("Yahoo"):
-                        ConfigurationSettings.SmtpSettings.SmtpServer = "smtp.mail.yahoo.com";
-                        ConfigurationSettings.SmtpSettings.SmtpPort = 465;
-                        break;
-                }
-            }
-        }
 
         private void OnCaptureTimerTick(object sender, object e)
         {
@@ -538,7 +487,7 @@ namespace MotionDetector.ViewModels
             }
         }
 
-        private async Task<SmtpResult> SendAlertEmail(List<IRandomAccessStream> streams, bool isTest = false)
+        private async Task<SmtpResult> SendAlertEmail(List<IRandomAccessStream> streams)
         {
             using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
                                                       ConfigurationSettings.SmtpSettings.SmtpPort,
@@ -554,9 +503,6 @@ namespace MotionDetector.ViewModels
                 emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
                 emailMessage.Subject = "ALERT | MOTION DETECTED";
 
-                if (isTest)
-                    emailMessage.Subject = "TEST | ALERT | MOTION DETECTED";
-
                 emailMessage.Body = "Alert detected at " + DateTime.Now;
 
                 int imageCount = 1;
@@ -570,9 +516,6 @@ namespace MotionDetector.ViewModels
 
                 streams.Clear();
                 SmtpResult result = await client.SendMailAsync(emailMessage);
-
-                if (!isTest)
-                    captureTimer.Start();
 
                 return result;
             }

@@ -16,87 +16,50 @@ using System.IO;
 using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.Storage;
-using Models.MotionDetector;
 using MotionDetector.ViewModels;
 using BasecodeLibrary.Controls;
 using RussLib.Pages;
-using Windows.UI.Xaml.Navigation;
+using MotionDetector.Views;
 
 namespace MotionDetector
 {
     public sealed partial class MainPage : BaseCodePageContainer
     {
-        /// <summary>
-        /// This is the list of images that will be emailed to the recipient once the threshold has been met.
-        /// </summary>
-        private List<IRandomAccessStream> streamList { get; set; }
-
-        public ConfigModel ConfigurationSettings { get; set; }
-
-        private MotionDetectorViewModel viewModel { get; set; }
-
         public MainPage()
         {
             this.InitializeComponent();
+            this.Loaded += MainPage_Loaded;
         }
 
-        private void Setup()
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            viewModel = new MotionDetectorViewModel();
-            this.DataContext = viewModel;
-
-            // As much as I hate doing this, we have to inject the capture element control becase
-            // the MediaCapture object can't initialize until it has a "Sink" (the capture element)
-            // to dump images into. However, if you just bind to it, it attempts to initialize 
-            // prior to binding. Chicken and egg problem. 
-            //
-            // The alternative was to create a ContentControl and bind to a CaptureElement maintained
-            // in the viewmodel. This sounds worse than just injecting it into the setup function.
-            viewModel.Setup(captureElementControl);
+            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Disabled;
+            MainDisplayFrame.CacheSize = 0;
+            MainDisplayFrame.Navigate(typeof(DashboardPage));
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        private void NavigationPane_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            this.Frame.BackStack.Clear();
-            Setup();
-        }
-
-        protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
-        {
-            this.DataContext = null;
-            await viewModel.Dispose();
-            viewModel = null;
-            rateReminder = null;
-            base.OnNavigatingFrom(e);
-        }
-
-        private void OnAboutButtonClicked(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(AboutPage));
-        }
-
-        // This is probably the dumbest thing ever....
-        // Command binding isn't working currently on buttons and flyout menu items.... 
-        // Not sure why but this is a quick work around.
-        private void OnSaveContextMenuClicked(object sender, RoutedEventArgs e)
-        {
-            viewModel.SaveImageCommand.Execute(sender);            
-        }
-
-        private void UpdateSettingsClosed(object sender, object e)
-        {
-            viewModel.UpdateSettings();
-        }
-
-        private async void TutorialButtonClicked(object sender, RoutedEventArgs e)
-        {
-            // The URI to launch
-            var uriBing = new Uri(@"https://youtu.be/EpaH1thk4IA");
-
-            // Launch the URI
-            await Windows.System.Launcher.LaunchUriAsync(uriBing);
+            switch (args.InvokedItem)
+            {
+                case ("Dashboard"):
+                    MainDisplayFrame.Navigate(typeof(DashboardPage));
+                    break;
+                case ("About"):
+                    MainDisplayFrame.Navigate(typeof(AboutPage));
+                    break;
+                default:
+                    if(args.InvokedItem is NavigationViewItem)
+                    {
+                        if((args.InvokedItem as NavigationViewItem).Content as String == "Settings")
+                        {
+                            MainDisplayFrame.Navigate(typeof(SettingsPage));
+                            break;
+                        }
+                    }
+                    MainDisplayFrame.Navigate(typeof(DashboardPage));
+                    break;
+            }
         }
     }
 }

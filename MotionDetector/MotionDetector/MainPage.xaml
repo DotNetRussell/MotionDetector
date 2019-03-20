@@ -4,193 +4,22 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MotionDetector"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:converters="using:BasecodeLibrary.Converters"
     xmlns:baseCodeControls="using:BasecodeLibrary.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
     x:Name="mainPage"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Page.Resources>
-        <converters:BoolToVisibilityConverter x:Key="boolToVisConverter" />
-    </Page.Resources>
-    <Grid >
-
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width=".25*" />
-                <ColumnDefinition Width=".75*" />
-            </Grid.ColumnDefinitions>
-            <CaptureElement Grid.Column="1"  VerticalAlignment="Center" Name="captureElementControl" />
-            <Border 
-            Grid.Row="0" Grid.Column="1"
-            VerticalAlignment="Top" 
-            HorizontalAlignment="Center" 
-            x:Name="alertBox" 
-            Visibility="{Binding Path=IsAlert, Converter={StaticResource boolToVisConverter}}" 
-            BorderBrush="Red" 
-            BorderThickness="5" 
-            Background="Black" 
-            Width="300" 
-            Height="100">
-                <TextBlock FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Red">| ALERT |</TextBlock>
-            </Border>
-            <StackPanel Orientation="Horizontal"  Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                <Button 
-                    Margin="5,0,0,0"
-                    Click="OnAboutButtonClicked" >
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <SymbolIcon Symbol="Contact"/>
-                            <TextBlock Text="About" FontSize="30" Margin="10,0,0,0"/>
-                        </StackPanel>
-                    </Button.Content>
-                </Button>
-
-                <Button ToolTipService.ToolTip="Tutorial" Click="TutorialButtonClicked" FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE897;" FontSize="40" />
-                <Button FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE713;" FontSize="40" >
-                    <Button.Flyout>
-                        <baseCodeControls:SettingsFlyout Closed="UpdateSettingsClosed">
-                            <baseCodeControls:SettingsFlyout.Buttons>
-                                <Button 
-                                    Command="{Binding Path=RunTestsCommand}" 
-                                    IsEnabled="{Binding Path=IsNotRunningTest, UpdateSourceTrigger=PropertyChanged}" 
-                                
-                                    ToolTipService.ToolTip="Sends a single test image to the recipient's email" 
-                                    Content="Smtp Test" />
-                            </baseCodeControls:SettingsFlyout.Buttons>
-                            <baseCodeControls:SettingItem 
-                                Label="Send Emails:" 
-                                SettingType="_bool" 
-                                BindingPath="ConfigurationSettings.AppConfig.SendEmails"
-                                ToolTip="Toggles whether or not to send emails when alert threshold is hit"/>
-                            <baseCodeControls:SettingItemSelector 
-                                Label="Preconfigured SMTP Servers" 
-                                BindingPath="ConfigurationSettings.SmtpSettings.PreferredSmtpServer"
-                                ToolTip="Sets the preconfigured Smtp server or custom Smtp server">
-                                <x:String>Gmail</x:String>
-                                <x:String>Yahoo</x:String>
-                                <x:String>Custom</x:String>
-                            </baseCodeControls:SettingItemSelector>
-                            <baseCodeControls:SettingItem 
-                                Label="Smtp Server:" 
-                                SettingType="_string" 
-                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpServer"
-                                ToolTip="Sets the url for the Smtp server"/>
-                            <baseCodeControls:SettingItem
-                                Label="Smtp Port:"
-                                SettingType="_string"
-                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpPort"
-                                ToolTip="Sets the port for the Smtp server"/>
-                            <baseCodeControls:SettingItem
-                                Label="Use SSL:"
-                                SettingType="_bool"
-                                BindingPath="ConfigurationSettings.SmtpSettings.UseSSL" 
-                                ToolTip="Toggles SSL for the SMTP server on and off"/>
-                            <baseCodeControls:SettingItem
-                                Label="Smtp Username:"
-                                SettingType="_string"
-                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpUserName" 
-                                ToolTip="Sets the SMTP server username"/>
-                            <baseCodeControls:SettingItem
-                                Label="Smtp Password:"
-                                SettingType="_password"
-                                BindingPath="ConfigurationSettings.SmtpSettings.SmtpPassword" 
-                                ToolTip="Sets the SMTP server password"/>
-                            <baseCodeControls:SettingItem
-                                Label="Smtp Recipient:"
-                                SettingType="_string"
-                                BindingPath="ConfigurationSettings.SmtpSettings.Recipient" 
-                                ToolTip="Sets the recipients email address for where alerts are sent"/>
-                            <baseCodeControls:SettingItem
-                                Label="Capture Delay:"
-                                SettingType="_int"
-                                BindingPath="ConfigurationSettings.AppConfig.CaptureDelay" 
-                                ToolTip="The amount of time in milliseconds between each image being captured for test"/>
-                            <baseCodeControls:SettingItem
-                                Label="Alert Delay:"
-                                SettingType="_int"
-                                BindingPath="ConfigurationSettings.AppConfig.AlertDelay" 
-                                ToolTip="The delay in seconds after a alert image is taken to prevent many of the same image"/>
-                            <baseCodeControls:SettingItem
-                                Label="Alert Threshold:"
-                                SettingType="_int"
-                                BindingPath="ConfigurationSettings.AppConfig.AlertThreshold" 
-                                ToolTip="How many images to take prior to emailing"/>
-                            <!--<baseCodeControls:SettingItem
-                                Label="Auto Save Alert Image:"
-                                SettingType="_bool"
-                                BindingPath="AutoSaveAlertImages"
-                                ToolTipService.ToolTip="Automatically save each alert image to the local harddrive"/>
-                            <baseCodeControls:SettingItem
-                                Label="Auto Save Location:"
-                                SettingType="_string"
-                                BindingPath="AutoSaveImageLocation"
-                                ToolTipService.ToolTip="The path to the location you which to save your alert images" />-->
-                            <baseCodeControls:SettingItem
-                                Label="Pixel Delta:"
-                                SettingType="_double"
-                                BindingPath="ConfigurationSettings.AppConfig.PixelDelta" 
-                                ToolTip="The delta between each pixel to trigger an alert"/>
-                            <baseCodeControls:SettingItem
-                                Label="Image Delta:"
-                                SettingType="_int"
-                                BindingPath="ConfigurationSettings.AppConfig.ImageDelta" 
-                                ToolTip="The delta between each image, in percent, to trigger an alert"/>
-                            <baseCodeControls:SettingItem
-                                Label="Night Mode Threshold"
-                                SettingType="_int"
-                                BindingPath="ConfigurationSettings.AppConfig.DarkShiftThreshold"
-                                ToolTip="0-255, The higher the number the less alerts you'll have when it gets dark. (Recommend &lt; 100)"/>
-                        </baseCodeControls:SettingsFlyout>
-                    </Button.Flyout>
-                </Button>
-
-            </StackPanel>
-            <Border BorderBrush="White" BorderThickness="2" HorizontalAlignment="Stretch" Grid.RowSpan="2">
-                <Pivot>
-                    <PivotItem Header="Baseline Images" Foreground="Black" >
-                        <ListView SelectionMode="Single" ItemsSource="{Binding Path=DisplayImages}" >
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Image Source="{Binding}"/>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </PivotItem>
-                    <PivotItem Header="Alert Images">
-                        <ListView 
-                            x:Name="alertImageListView" 
-                            ItemsSource="{Binding Path=AlertDisplayImages}" 
-                            SelectedItem="{Binding Path=SelectedAlertImage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            SelectionMode="Single">
-                            <ListView.Resources>
-                                <Style TargetType="ListViewItem">
-                                    <Setter Property="ContextFlyout">
-                                        <Setter.Value>
-                                            <MenuFlyout>
-                                                <MenuFlyoutItem Text="Save Image" Icon="Save" Click="OnSaveContextMenuClicked"/>
-                                            </MenuFlyout>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListView.Resources>
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel>
-                                        <Image Source="{Binding Path=AlertDisplayImage}"/>
-                                        <TextBlock Text="{Binding Path=AlertDisplayCaption}" />
-                                    </StackPanel>                                    
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </PivotItem>
-                </Pivot>
-
-            </Border>
-        </Grid>
-        <baseCodeControls:RateReminder x:Name="rateReminder" ReminderTrigger="1"  />
-
-    </Grid>
+    <NavigationView 
+        PaneDisplayMode="LeftCompact" 
+        x:Name="NavigationPane" 
+        IsBackButtonVisible="Collapsed"
+        ItemInvoked="NavigationPane_ItemInvoked">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Dashboard" Icon="Camera" />
+            <NavigationViewItem Content="About" Icon="Help" />
+        </NavigationView.MenuItems>
+        <Frame x:Name="MainDisplayFrame" />
+    </NavigationView>   
 </baseCodeControls:BaseCodePageContainer>
