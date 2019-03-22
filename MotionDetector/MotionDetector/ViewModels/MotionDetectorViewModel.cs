@@ -76,7 +76,7 @@ namespace MotionDetector.ViewModels
 
         private MediaCapture MediaCaptureElement { get; set; }
 
-        public WriteableBitmap SelectedAlertImage { get; set; }
+        public AlertDisplayImageModel SelectedAlertImage { get; set; }
 
         /// <summary>
         /// The baseline images are what each newly captured image will be compared to.
@@ -165,12 +165,12 @@ namespace MotionDetector.ViewModels
                 using (IRandomAccessStream stream = await destFile.OpenAsync(FileAccessMode.ReadWrite))
                 {
                     BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
-                    Stream pixelStream = SelectedAlertImage.PixelBuffer.AsStream();
+                    Stream pixelStream = SelectedAlertImage.AlertDisplayImage.PixelBuffer.AsStream();
                     byte[] pixels = new byte[pixelStream.Length];
                     await pixelStream.ReadAsync(pixels, 0, pixels.Length);
 
                     encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore,
-                                (uint)SelectedAlertImage.PixelWidth, (uint)SelectedAlertImage.PixelHeight, 96.0, 96.0, pixels);
+                                (uint)SelectedAlertImage.AlertDisplayImage.PixelWidth, (uint)SelectedAlertImage.AlertDisplayImage.PixelHeight, 96.0, 96.0, pixels);
                     await encoder.FlushAsync();
                 }
             }
@@ -237,27 +237,27 @@ namespace MotionDetector.ViewModels
                     ConfigVersion = this.configVersion
                 }
             };
-
-            if (!await SaveManager.FileExists("config.json"))
-            {
-                await SaveManager.SaveJsonFile("config.json", config);
-            }
-
-            // Apparently there's an edge case where if you create a config file and then attempt to read it right away,
-            // it won't exist yet. Doing this little wait and see check fixes it. This also only happens on first run.
-            while(!await SaveManager.FileExists("config.json")) { continue; }
-
-            ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
-
-            if (ConfigurationSettings.AppConfig.ConfigVersion < this.configVersion)
-            {
-                await SaveManager.SaveJsonFile("config.json", config);
-            }
-
-            Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
-            
             try
             {
+                if (!await SaveManager.FileExists("config.json"))
+                {
+                    await SaveManager.SaveJsonFile("config.json", config);
+                }
+
+                // Apparently there's an edge case where if you create a config file and then attempt to read it right away,
+                // it won't exist yet. Doing this little wait and see check fixes it. This also only happens on first run.
+                while (!await SaveManager.FileExists("config.json")) { continue; }
+
+                ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
+
+                if (ConfigurationSettings.AppConfig.ConfigVersion < this.configVersion)
+                {
+                    await SaveManager.SaveJsonFile("config.json", config);
+                }
+
+                Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
+            
+
                 await MediaCaptureElement.InitializeAsync();
                 captureElement.Source = MediaCaptureElement;
                 displayRequest.RequestActive();
@@ -271,7 +271,7 @@ namespace MotionDetector.ViewModels
                 captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
                 captureTimer.Tick += OnCaptureTimerTick;
             }
-            catch (Exception)
+            catch 
             {
                 MessageDialog dialog = new MessageDialog("There was an issue while finding and starting your camera. If this is a mistake, please reach out to the developer on Twitter @DotNetRussell or at Admin@DotNetRussell.com");
                 await dialog.ShowAsync();

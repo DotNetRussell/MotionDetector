@@ -20,25 +20,47 @@ using MotionDetector.ViewModels;
 using BasecodeLibrary.Controls;
 using RussLib.Pages;
 using MotionDetector.Views;
+using MotionDetector.Utilities;
 
 namespace MotionDetector
 {
-    public sealed partial class MainPage : BaseCodePageContainer
+    public sealed partial class MainPage : BaseCodePageContainer, INotifyPropertyChanged
     {
+
+        private Visibility _AdVisibility;
+
+        public Visibility AdVisibility
+        {
+            get { return _AdVisibility; }
+            set { _AdVisibility = value; OnPropertyChanged("AdVisibility"); }
+        }
+
+
         public MainPage()
         {
+            AdVisibility = Visibility.Visible;
+
             this.InitializeComponent();
             this.Loaded += MainPage_Loaded;
         }
-
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        
+        private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Disabled;
             MainDisplayFrame.CacheSize = 0;
             MainDisplayFrame.Navigate(typeof(DashboardPage));
+
+//For DEMO only
+#if DEBUG
+            await StoreServices.SetupDemoStore();
+#endif 
+            StoreServices.CheckFreemiumStatus();
+            AdVisibility = StoreServices.RemoveAds ? Visibility.Collapsed : Visibility.Visible;
+
+            this.DataContext = this;
         }
 
-        private void NavigationPane_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+        private async void NavigationPane_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             switch (args.InvokedItem)
             {
@@ -47,6 +69,13 @@ namespace MotionDetector
                     break;
                 case ("About"):
                     MainDisplayFrame.Navigate(typeof(AboutPage));
+                    break;
+                case ("Remove Ads"):
+                    AdVisibility = await StoreServices.OpenStoreRemoveAds() ? Visibility.Collapsed : Visibility.Visible;
+                    break;
+                case ("Tutorial"):
+                    Uri youtubeTutorial = new Uri(@"https://youtu.be/EpaH1thk4IA");
+                    await Windows.System.Launcher.LaunchUriAsync(youtubeTutorial);
                     break;
                 default:
                     if(args.InvokedItem is NavigationViewItem)

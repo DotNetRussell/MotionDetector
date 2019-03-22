@@ -71,18 +71,5 @@ namespace MotionDetector.Views
             viewModel.SaveImageCommand.Execute(sender);
         }
 
-        private void UpdateSettingsClosed(object sender, object e)
-        {
-          //  viewModel.UpdateSettings();
-        }
-
-        private async void TutorialButtonClicked(object sender, RoutedEventArgs e)
-        {
-            // The URI to launch
-            var uriBing = new Uri(@"https://youtu.be/EpaH1thk4IA");
-
-            // Launch the URI
-            await Windows.System.Launcher.LaunchUriAsync(uriBing);
-        }
     }
 }
