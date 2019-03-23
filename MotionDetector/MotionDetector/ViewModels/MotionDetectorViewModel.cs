@@ -90,6 +90,13 @@ namespace MotionDetector.ViewModels
 
         #endregion
 
+        #region Variables
+
+        //This is the secret sauce
+        public CaptureElement caputureSink = new CaptureElement();
+
+        #endregion
+
         #region Constructors
 
         public MotionDetectorViewModel()
@@ -134,21 +141,18 @@ namespace MotionDetector.ViewModels
         {
             CameraServices.SaveImage(SelectedAlertImage);
         }
-        
+
 
         #endregion
 
         #region Public Functions
 
-        /// <summary>
-        /// Sets up the application and initializes the camera.
-        /// </summary>
-        public async void Setup(CaptureElement captureElement)
+        public async void InitializeCameraAndSink()
         {
             // If the element isn't null and it's just not streaming, that means we're still initializing it
             // don't reinitialize it or it'll explode. This is a side effect of the backgrounding shit
             // we need to do
-            if(MediaCaptureElement != null 
+            if (MediaCaptureElement != null
                 && MediaCaptureElement.CameraStreamState == CameraStreamState.NotStreaming)
             {
                 return;
@@ -160,6 +164,17 @@ namespace MotionDetector.ViewModels
             //make request to put in active state
             _displayRequest.RequestActive();
 
+            await MediaCaptureElement.InitializeAsync();
+            caputureSink.Source = MediaCaptureElement;
+
+            await MediaCaptureElement.StartPreviewAsync();
+        }
+
+        /// <summary>
+        /// Sets up the application and initializes the camera.
+        /// </summary>
+        public async void Setup()
+        {
             ConfigModel config = new ConfigModel()
             {
                 SmtpSettings = new SmtpSettingsModel()
@@ -197,12 +212,7 @@ namespace MotionDetector.ViewModels
                     await SaveManager.SaveJsonFile("config.json", config);
                 }
 
-
-                await MediaCaptureElement.InitializeAsync();
-                captureElement.Source = MediaCaptureElement;
-                displayRequest.RequestActive();
-
-                await MediaCaptureElement.StartPreviewAsync();
+                InitializeCameraAndSink();
 
                 baselineTimer.Interval = new TimeSpan(0, 0, 10);
                 baselineTimer.Tick += OnBaselineTimerTick;
@@ -211,14 +221,14 @@ namespace MotionDetector.ViewModels
                 captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
                 captureTimer.Tick += OnCaptureTimerTick;
             }
-            catch
+            catch(Exception error)
             {
                 //So for some reason on initial launch there's some race condition that happens in the above block
                 //it only happens on the initial launch and it only happens once.
                 //it's late, I'm sick, and I'm done trying to figure out the depths of this platform
                 //recursive call fixes it 
                 //<light match, drop match, walk away>
-                Setup(captureElement);
+                Setup();
             }
         }
 

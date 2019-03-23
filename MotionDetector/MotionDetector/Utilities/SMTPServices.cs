@@ -16,6 +16,7 @@ namespace MotionDetector.Utilities
 
         public static async Task<SmtpResult> SendAlertEmail(List<IRandomAccessStream> streams, ConfigModel ConfigurationSettings)
         {
+            string recipient = ConfigurationSettings.SmtpSettings.Recipient ?? String.Empty;
             using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
                                                       ConfigurationSettings.SmtpSettings.SmtpPort,
                                                       ConfigurationSettings.SmtpSettings.UseSSL,
@@ -27,7 +28,7 @@ namespace MotionDetector.Utilities
                 emailMessage.Importance = EmailImportance.High;
                 emailMessage.Sender.Address = "UniversalMotionDetector@donotreply.com";
                 emailMessage.Sender.Name = "Universal Motion Detector Elite";
-                emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
+                emailMessage.To.Add(new EmailRecipient(recipient));
                 emailMessage.Subject = "ALERT | MOTION DETECTED";
 
                 emailMessage.Body = "Alert detected at " + DateTime.Now;

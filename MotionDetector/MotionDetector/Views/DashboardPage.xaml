@@ -19,7 +19,7 @@
                 <ColumnDefinition Width=".25*" />
                 <ColumnDefinition Width=".75*" />
             </Grid.ColumnDefinitions>
-            <CaptureElement Grid.Column="1"  VerticalAlignment="Center" Name="captureElementControl" />
+            <ContentControl Grid.Column="1"  VerticalAlignment="Center" Name="captureElementControl" />
             <Border 
                 Grid.Row="0" Grid.Column="1"
                 VerticalAlignment="Top" 

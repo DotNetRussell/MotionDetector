@@ -35,28 +35,30 @@ namespace MotionDetector.Views
         public DashboardPage()
         {
             this.InitializeComponent();
-            App.Current.LeavingBackground += Current_LeavingBackground;          
+            App.Current.LeavingBackground += Current_LeavingBackground;
+            App.Current.EnteredBackground += Current_EnteredBackground;
         }
 
+        //**-------------**********************************************--------------**//
+        // We need to reinitialize the capture sink every time someone minimizes and maxamizes the window
+        // This is because UWP -- Internals --- Limitations --- etc --- #HacksAndDuctTape 
+        private void Current_EnteredBackground(object sender, Windows.ApplicationModel.EnteredBackgroundEventArgs e)
+        {
+            viewModel.InitializeCameraAndSink();
+        }
         private void Current_LeavingBackground(object sender, Windows.ApplicationModel.LeavingBackgroundEventArgs e)
         {
-            // We need to reinitialize the media element every time someone minimizes and maxamizes the window
-            viewModel.Setup(captureElementControl);
+            viewModel.InitializeCameraAndSink();
         }
+        //*****************************************************************************//
 
         private void Setup()
         {
             viewModel = new MotionDetectorViewModel(); ;
             this.DataContext = viewModel;
-
-            // As much as I hate doing this, we have to inject the capture element control becase
-            // the MediaCapture object can't initialize until it has a "Sink" (the capture element)
-            // to dump images into. However, if you just bind to it, it attempts to initialize 
-            // prior to binding. Chicken and egg problem. 
-            //
-            // The alternative was to create a ContentControl and bind to a CaptureElement maintained
-            // in the viewmodel. This sounds worse than just injecting it into the setup function.
-            viewModel.Setup(captureElementControl);
+           
+            viewModel.Setup();
+            this.captureElementControl.Content = viewModel.caputureSink;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -69,6 +71,7 @@ namespace MotionDetector.Views
         {
             (this.DataContext as MotionDetectorViewModel).Destroyer();
             App.Current.LeavingBackground -= Current_LeavingBackground;
+            App.Current.EnteredBackground -= Current_EnteredBackground;
             base.OnNavigatedFrom(e);
         }
         

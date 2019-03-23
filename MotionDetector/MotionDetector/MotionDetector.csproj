@@ -20,7 +20,7 @@
     <PackageCertificateKeyFile>MotionDetector_StoreKey.pfx</PackageCertificateKeyFile>
     <PackageCertificateThumbprint>8AE10E371093F87777A787851FB33015CAE083EE</PackageCertificateThumbprint>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <AppInstallerUpdateFrequency>1</AppInstallerUpdateFrequency>
