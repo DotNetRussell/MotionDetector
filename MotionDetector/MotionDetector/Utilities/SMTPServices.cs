@@ -25,8 +25,8 @@ namespace MotionDetector.Utilities
                 EmailMessage emailMessage = new EmailMessage();
 
                 emailMessage.Importance = EmailImportance.High;
-                emailMessage.Sender.Address = "IoTAlertApp@donotreply.com";
-                emailMessage.Sender.Name = "IoT App";
+                emailMessage.Sender.Address = "UniversalMotionDetector@donotreply.com";
+                emailMessage.Sender.Name = "Universal Motion Detector Elite";
                 emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
                 emailMessage.Subject = "ALERT | MOTION DETECTED";
 
@@ -50,23 +50,28 @@ namespace MotionDetector.Utilities
 
         public static async void RunSMTPTest(ConfigModel ConfigurationSettings, Action callback)
         {
-            using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
-                                                      ConfigurationSettings.SmtpSettings.SmtpPort,
-                                                      ConfigurationSettings.SmtpSettings.UseSSL,
-                                                      ConfigurationSettings.SmtpSettings.SmtpUserName,
-                                                      ConfigurationSettings.SmtpSettings.SmtpPassword))
+            if (String.IsNullOrEmpty(ConfigurationSettings.SmtpSettings.Recipient))
             {
-                EmailMessage emailMessage = new EmailMessage();
-                emailMessage.Subject = "TEST | ALERT | MOTION DETECTED";
-                emailMessage.Importance = EmailImportance.High;
-                emailMessage.Sender.Address = "IoTAlertApp@donotreply.com";
-                emailMessage.Sender.Name = "IoT App";
-                emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
-                emailMessage.Subject = "ALERT | MOTION DETECTED";
-
-
-                SmtpResult result = await client.SendMailAsync(emailMessage);
                 callback();
+            }
+            else
+            {
+                using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
+                                          ConfigurationSettings.SmtpSettings.SmtpPort,
+                                          ConfigurationSettings.SmtpSettings.UseSSL,
+                                          ConfigurationSettings.SmtpSettings.SmtpUserName,
+                                          ConfigurationSettings.SmtpSettings.SmtpPassword))
+                {
+                    EmailMessage emailMessage = new EmailMessage();
+                    emailMessage.Subject = "TEST | ALERT | MOTION DETECTED";
+                    emailMessage.Importance = EmailImportance.High;
+                    emailMessage.Sender.Address = "UniversalMotionDetector@donotreply.com";
+                    emailMessage.Sender.Name = "Universal Motion Detector Elite";
+                    emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
+    
+                    SmtpResult result = await client.SendMailAsync(emailMessage);
+                    callback();
+                }
             }
         }
 
