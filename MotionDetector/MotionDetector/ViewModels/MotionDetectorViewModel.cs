@@ -1,30 +1,22 @@
 ﻿using BasecodeLibrary.Utilities;
-using LightBuzz.SMTP;
 using Models.MotionDetector;
 using MotionDetector.Models;
-using Newtonsoft.Json;
+using MotionDetector.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Windows.ApplicationModel.Email;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
+using Windows.Media.Devices;
 using Windows.Media.MediaProperties;
-using Windows.Storage;
-using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.System.Display;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace MotionDetector.ViewModels
@@ -36,10 +28,7 @@ namespace MotionDetector.ViewModels
         #region private backers
         private int configVersion = 2;
         private bool _isAlert;
-        private int _sensitivity;
-        private bool _autoSaveAlertImages;
         private List<byte[]> baselineImages;
-        private string _autoSaveImageLocation;
         private ObservableCollection<WriteableBitmap> _displayImages;
         private ObservableCollection<AlertDisplayImageModel> _alertDisplayImages;
         #endregion
@@ -50,31 +39,9 @@ namespace MotionDetector.ViewModels
             set { _isAlert = value; OnPropertyChanged("IsAlert"); }
         }
 
-        /// <summary>
-        /// Sets the sensitivity of the image delta. If set to 10, then if any of the baseline images are greater than 10% different
-        /// than the captured image, it will alert.
-        /// </summary>
-        public int Sensitivity
-        {
-            get { return _sensitivity; }
-            set { _sensitivity = value; ConfigurationSettings.AppConfig.ImageDelta = value; OnPropertyChanged("Sensitivity"); }
-        }
-        
-        public bool AutoSaveAlertImages
-        {
-            get { return _autoSaveAlertImages; }
-            set { _autoSaveAlertImages = value; OnPropertyChanged("AutoSaveAlertImages"); }
-        }
-
-        public string AutoSaveImageLocation
-        {
-            get { return _autoSaveImageLocation; }
-            set { _autoSaveImageLocation = value; OnPropertyChanged("AutoSaveImageLocation"); }
-        }
-
         public ConfigModel ConfigurationSettings { get; set; }
 
-        private MediaCapture MediaCaptureElement { get; set; }
+        public MediaCapture MediaCaptureElement { get; set; }
 
         public AlertDisplayImageModel SelectedAlertImage { get; set; }
 
@@ -106,10 +73,11 @@ namespace MotionDetector.ViewModels
         /// </summary>
         private DispatcherTimer captureTimer { get; set; }
 
+        /// <summary>
+        /// The timer that controls the baseline image capture frequency 
+        /// </summary>
         private DispatcherTimer baselineTimer { get; set; }
-
-        private DispatcherTimer delayTimer { get; set; }
-
+        
         private DisplayRequest displayRequest { get; set; }
         
         private LowLagPhotoCapture lowLagCapture { get; set; }
@@ -126,80 +94,47 @@ namespace MotionDetector.ViewModels
 
         public MotionDetectorViewModel()
         {
-            delayTimer = new DispatcherTimer();
             baselineImages = new List<byte[]>();
             captureTimer = new DispatcherTimer();
             baselineTimer = new DispatcherTimer();
             displayRequest = new DisplayRequest();
-            MediaCaptureElement = new MediaCapture();
             streamList = new List<IRandomAccessStream>();
             DisplayImages = new ObservableCollection<WriteableBitmap>();
             AlertDisplayImages = new ObservableCollection<AlertDisplayImageModel>();
 
-            SaveImageCommand = new CommandHandler(SaveImageExecuted, CanExecuteSaveImage);
+            SaveImageCommand = new CommandHandler(SaveImageExecuted);
         }
 
-        #endregion
 
-        #region CanExecute functions
-
-
-        public bool CanExecuteSaveImage()
+        public void Destroyer()
         {
-            return true;
+            MediaCaptureElement.StopPreviewAsync();
+            MediaCaptureElement.Dispose();
+            MediaCaptureElement = null;
+            baselineImages = null;
+            captureTimer.Stop();
+
+            baselineTimer.Tick -= OnBaselineTimerTick;
+            captureTimer.Tick -= OnCaptureTimerTick;
+
+            displayRequest = null;
+            streamList = null;
+            DisplayImages = null;
+            AlertDisplayImages = null;
+
+            SaveImageCommand = null;
         }
-        
 
         #endregion
+
 
         #region Executed functions
 
-        private async void SaveImageExecuted()
+        private void SaveImageExecuted()
         {
-            if (SelectedAlertImage != null)
-            {
-                FileSavePicker picker = new FileSavePicker();
-                picker.FileTypeChoices.Add("PNG File", new List<string> { ".png" });
-                StorageFile destFile = await picker.PickSaveFileAsync();
-
-                using (IRandomAccessStream stream = await destFile.OpenAsync(FileAccessMode.ReadWrite))
-                {
-                    BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
-                    Stream pixelStream = SelectedAlertImage.AlertDisplayImage.PixelBuffer.AsStream();
-                    byte[] pixels = new byte[pixelStream.Length];
-                    await pixelStream.ReadAsync(pixels, 0, pixels.Length);
-
-                    encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore,
-                                (uint)SelectedAlertImage.AlertDisplayImage.PixelWidth, (uint)SelectedAlertImage.AlertDisplayImage.PixelHeight, 96.0, 96.0, pixels);
-                    await encoder.FlushAsync();
-                }
-            }
+            CameraServices.SaveImage(SelectedAlertImage);
         }
         
-        /// <summary>
-        /// Tests the systems capture and email functionality.
-        /// </summary>
-        /// <param name="sender">Sending button</param>
-        /// <param name="e">Button args</param>
-        private async void RunTestsExecuted()
-        {
-            try
-            {
-                if (captureTimer.IsEnabled)
-                {
-                    captureTimer.Stop();
-                }
-
-                var stream = new InMemoryRandomAccessStream();
-                await MediaCaptureElement.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
-                await Task.Delay(10);
-                List<IRandomAccessStream> streamTestList = new List<IRandomAccessStream>() { stream };
-                await SendAlertEmail(streamTestList);
-                captureTimer.Start();
-            }
-            catch (Exception) { /*Working with hardware has a lot of exception cases.... nom nom nom*/}
-
-        }
 
         #endregion
 
@@ -210,10 +145,17 @@ namespace MotionDetector.ViewModels
         /// </summary>
         public async void Setup(CaptureElement captureElement)
         {
-            Windows.System.Display.DisplayRequest _displayRequest = null;
-            //create the request instance if needed
-            if (_displayRequest == null)
-                _displayRequest = new Windows.System.Display.DisplayRequest();
+            // If the element isn't null and it's just not streaming, that means we're still initializing it
+            // don't reinitialize it or it'll explode. This is a side effect of the backgrounding shit
+            // we need to do
+            if(MediaCaptureElement != null 
+                && MediaCaptureElement.CameraStreamState == CameraStreamState.NotStreaming)
+            {
+                return;
+            }
+
+            MediaCaptureElement = new MediaCapture();
+            DisplayRequest _displayRequest = new DisplayRequest();
 
             //make request to put in active state
             _displayRequest.RequestActive();
@@ -255,8 +197,6 @@ namespace MotionDetector.ViewModels
                     await SaveManager.SaveJsonFile("config.json", config);
                 }
 
-                Sensitivity = ConfigurationSettings.AppConfig.ImageDelta;
-            
 
                 await MediaCaptureElement.InitializeAsync();
                 captureElement.Source = MediaCaptureElement;
@@ -271,34 +211,17 @@ namespace MotionDetector.ViewModels
                 captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
                 captureTimer.Tick += OnCaptureTimerTick;
             }
-            catch 
+            catch
             {
-                MessageDialog dialog = new MessageDialog("There was an issue while finding and starting your camera. If this is a mistake, please reach out to the developer on Twitter @DotNetRussell or at Admin@DotNetRussell.com");
-                await dialog.ShowAsync();
+                //So for some reason on initial launch there's some race condition that happens in the above block
+                //it only happens on the initial launch and it only happens once.
+                //it's late, I'm sick, and I'm done trying to figure out the depths of this platform
+                //recursive call fixes it 
+                //<light match, drop match, walk away>
+                Setup(captureElement);
             }
         }
 
-        public async Task<bool> Dispose()
-        {
-
-            await MediaCaptureElement.StopPreviewAsync();
-            MediaCaptureElement.Dispose();
-            MediaCaptureElement = null;
-            baselineImages = null;
-            captureTimer.Stop();
-
-            baselineTimer.Tick -= OnBaselineTimerTick;
-            captureTimer.Tick -= OnCaptureTimerTick;
-            delayTimer.Tick -= OnDelayTimerTick;
-
-            displayRequest = null;
-            streamList = null;
-            DisplayImages = null;
-            AlertDisplayImages = null;
-
-            SaveImageCommand = null;
-            return true;
-        }
 
         #endregion
 
@@ -357,9 +280,9 @@ namespace MotionDetector.ViewModels
                 DisplayImages.Add(writeableBitmap);
 
             }
-            catch (Exception)
+            catch (Exception error)
             {
-                // Sometimes when you serial click the capture button we get an explosion...
+                // Sometimes when you serial capture we get an explosion because the hardware isn't ready...
                 // Eat it and move on
             }
         }
@@ -382,20 +305,19 @@ namespace MotionDetector.ViewModels
                 byte[] imageBytes = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
                 softwareBitmap.CopyToBuffer(imageBytes.AsBuffer());
 
-                bool isAlert = CheckForMotion(imageBytes);
+                bool isAlert = IsAlert = MotionServices.CheckForMotion(ConfigurationSettings, imageBytes, baselineImages);
+
 
                 if (isAlert)
                 {
-
                     WriteableBitmap writeableBitmap = new WriteableBitmap(softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);
                     softwareBitmap.CopyToBuffer(writeableBitmap.PixelBuffer);
                     AlertDisplayImages.Add(new AlertDisplayImageModel() { AlertDisplayImage = writeableBitmap, AlertDisplayCaption = DateTime.Now.ToString() });
 
-                    delayTimer.Interval = new TimeSpan(0, 0, ConfigurationSettings.AppConfig.AlertDelay);
-
                     captureTimer.Stop();
-                    delayTimer.Tick += OnDelayTimerTick;
-                    delayTimer.Start();
+                    await Task.Delay(new TimeSpan(0, 0, ConfigurationSettings.AppConfig.AlertDelay));
+                    captureTimer.Start();
+
 
                     // It seems silly that we need to capture a second image but the first image that was captured isn't in a format that can
                     // be easily emailed. This being the case, I decided it'd just be easier to grab another capture in the correct format and 
@@ -404,125 +326,21 @@ namespace MotionDetector.ViewModels
                     await MediaCaptureElement.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
                     await Task.Delay(10);
                     streamList.Add(stream);
-
-                    if (AutoSaveAlertImages)
-                    {                    }
-
+                    
                     if (ConfigurationSettings.AppConfig.SendEmails && streamList.Count > ConfigurationSettings.AppConfig.AlertThreshold)
                     {
                         captureTimer.Stop();
-                        await SendAlertEmail(streamList);
+                        await SMTPServices.SendAlertEmail(streamList, ConfigurationSettings);
                         await Task.Delay(new TimeSpan(0, 1, 0));
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception error)
             {
                 // Getting random COM errors. Just eat it and continue. There's nothing I can do about this. 
             }
         }
 
-        private void OnDelayTimerTick(object sender, object e)
-        {
-            DispatcherTimer delayTimer = sender as DispatcherTimer;
-            if (delayTimer != null)
-            {
-                delayTimer.Stop();
-                captureTimer.Start();
-            }
-        }
-
-        /// <summary>
-        /// Determins if the image being examined is a dark image. If it is, then true will be returned
-        /// </summary>
-        /// <param name="testImage">The image being examined</param>
-        /// <returns>Checks if image is dark</returns>
-        private bool CheckIfImageIsDarkShifted(byte[] testImage)
-        {
-            double total = 0;
-            foreach (byte image in testImage)
-            {
-                total += Convert.ToDouble(image);
-            }
-            double average = total / testImage.Length;
-
-            return average < ConfigurationSettings.AppConfig.DarkShiftThreshold;
-        }
-
-        /// <summary>
-        /// Uses the parameters set in the config file to test the image passed in against all baseline images. If any of the baseline
-        /// images match, then false is returned. Otherwise true is returned.
-        /// </summary>
-        /// <param name="testImage">The image you wish to test against all baseline images.</param>
-        /// <returns>Returns true if none of the baseline images match the image passed in.</returns>
-        private bool CheckForMotion(byte[] testImage)
-        {
-            double configPixelDelta = ConfigurationSettings.AppConfig.PixelDelta;
-            List<bool> baseLineChecks = new List<bool>();
-
-            foreach (byte[] baseline in baselineImages)
-            {
-
-                int changedPixels = 0;
-
-                for (int x = 0; x < baseline.Length; x++)
-                {
-                    double pixelDelta = Convert.ToDouble(baseline[x]) / Convert.ToDouble(testImage[x]);
-                    if (pixelDelta > (1.0 + configPixelDelta) 
-                        || pixelDelta < (1.0 - configPixelDelta))
-                    {
-                        changedPixels++;
-                    }
-                }
-
-                baseLineChecks.Add(Convert.ToDouble(changedPixels) / Convert.ToDouble(baseline.Length) 
-                    > (Convert.ToDouble(Sensitivity) / 100d));
-            }
-
-            if (!baseLineChecks.Contains(false) 
-                    && !CheckIfImageIsDarkShifted(testImage))
-            {
-                return IsAlert = true;
-            }
-            else
-            {
-                return IsAlert = false;
-            }
-        }
-
-        private async Task<SmtpResult> SendAlertEmail(List<IRandomAccessStream> streams)
-        {
-            using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
-                                                      ConfigurationSettings.SmtpSettings.SmtpPort,
-                                                      ConfigurationSettings.SmtpSettings.UseSSL,
-                                                      ConfigurationSettings.SmtpSettings.SmtpUserName,
-                                                      ConfigurationSettings.SmtpSettings.SmtpPassword))
-            {
-                EmailMessage emailMessage = new EmailMessage();
-
-                emailMessage.Importance = EmailImportance.High;
-                emailMessage.Sender.Address = "IoTAlertApp@donotreply.com";
-                emailMessage.Sender.Name = "IoT App";
-                emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
-                emailMessage.Subject = "ALERT | MOTION DETECTED";
-
-                emailMessage.Body = "Alert detected at " + DateTime.Now;
-
-                int imageCount = 1;
-                foreach (IRandomAccessStream stream in streams)
-                {
-                    string fileName = "image_" + imageCount + ".png";
-                    RandomAccessStreamReference reference = RandomAccessStreamReference.CreateFromStream(stream);
-                    emailMessage.Attachments.Add(new EmailAttachment(fileName, reference));
-                    imageCount++;
-                }
-
-                streams.Clear();
-                SmtpResult result = await client.SendMailAsync(emailMessage);
-
-                return result;
-            }
-        }
 
         #endregion
     }

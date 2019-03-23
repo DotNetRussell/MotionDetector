@@ -21,6 +21,7 @@ using BasecodeLibrary.Controls;
 using RussLib.Pages;
 using MotionDetector.Views;
 using MotionDetector.Utilities;
+using Windows.UI.Core;
 
 namespace MotionDetector
 {
@@ -34,8 +35,7 @@ namespace MotionDetector
             get { return _AdVisibility; }
             set { _AdVisibility = value; OnPropertyChanged("AdVisibility"); }
         }
-
-
+        
         public MainPage()
         {
             AdVisibility = Visibility.Visible;
@@ -43,11 +43,10 @@ namespace MotionDetector
             this.InitializeComponent();
             this.Loaded += MainPage_Loaded;
         }
-        
+
+
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Disabled;
-            MainDisplayFrame.CacheSize = 0;
             MainDisplayFrame.Navigate(typeof(DashboardPage));
 
 //For DEMO only

@@ -1,6 +1,7 @@
 ﻿using BasecodeLibrary.Utilities;
 using LightBuzz.SMTP;
 using Models.MotionDetector;
+using MotionDetector.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,29 +35,7 @@ namespace MotionDetector.ViewModels
             this.ConfigurationSettings.SmtpSettings.PropertyChanged -= SettingsViewModel_PropertyChanged;
         }
 
-        private async void RunSMTPTestExecuted()
-        {
-            IsNotRunningTest = false;
-            using (SmtpClient client = new SmtpClient(ConfigurationSettings.SmtpSettings.SmtpServer,
-                                                      ConfigurationSettings.SmtpSettings.SmtpPort,
-                                                      ConfigurationSettings.SmtpSettings.UseSSL,
-                                                      ConfigurationSettings.SmtpSettings.SmtpUserName,
-                                                      ConfigurationSettings.SmtpSettings.SmtpPassword))
-            {
-                EmailMessage emailMessage = new EmailMessage();
-                emailMessage.Subject = "TEST | ALERT | MOTION DETECTED";
-                emailMessage.Importance = EmailImportance.High;
-                emailMessage.Sender.Address = "IoTAlertApp@donotreply.com";
-                emailMessage.Sender.Name = "IoT App";
-                emailMessage.To.Add(new EmailRecipient(ConfigurationSettings.SmtpSettings.Recipient));
-                emailMessage.Subject = "ALERT | MOTION DETECTED";
-
- 
-                SmtpResult result = await client.SendMailAsync(emailMessage);
-                IsNotRunningTest = true;
-            }
-        }
-
+       
         private async void Setup()
         {
             RunTestsCommand = new CommandHandler(RunSMTPTestExecuted);
@@ -64,6 +43,12 @@ namespace MotionDetector.ViewModels
             OnPropertyChanged("ConfigurationSettings");
             this.ConfigurationSettings.AppConfig.PropertyChanged += SettingsViewModel_PropertyChanged;
             this.ConfigurationSettings.SmtpSettings.PropertyChanged += SettingsViewModel_PropertyChanged;
+        }
+
+        private void RunSMTPTestExecuted()
+        {
+            IsNotRunningTest = false;
+            SMTPServices.RunSMTPTest(ConfigurationSettings, () => { IsNotRunningTest = true; });
         }
 
         private void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

@@ -7,8 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:converters="using:BasecodeLibrary.Converters"
     xmlns:baseCodeControls="using:BasecodeLibrary.Controls"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
 
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="boolToVisConverter" />
@@ -22,42 +21,23 @@
             </Grid.ColumnDefinitions>
             <CaptureElement Grid.Column="1"  VerticalAlignment="Center" Name="captureElementControl" />
             <Border 
-            Grid.Row="0" Grid.Column="1"
-            VerticalAlignment="Top" 
-            HorizontalAlignment="Center" 
-            x:Name="alertBox" 
-            Visibility="{Binding Path=IsAlert, Converter={StaticResource boolToVisConverter}}" 
-            BorderBrush="Red" 
-            BorderThickness="5" 
-            Background="Black" 
-            Width="300" 
-            Height="100">
+                Grid.Row="0" Grid.Column="1"
+                VerticalAlignment="Top" 
+                HorizontalAlignment="Center" 
+                x:Name="alertBox" 
+                Visibility="{Binding Path=IsAlert, Converter={StaticResource boolToVisConverter}}" 
+                BorderBrush="Red" 
+                BorderThickness="5" 
+                Width="300" 
+                Height="100">
                 <TextBlock FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Red">| ALERT |</TextBlock>
             </Border>
             <StackPanel Orientation="Horizontal"  Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                <!--<Button 
-                    Margin="5,0,0,0"
-                    Click="OnAboutButtonClicked" >
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <SymbolIcon Symbol="Contact"/>
-                            <TextBlock Text="About" FontSize="30" Margin="10,0,0,0"/>
-                        </StackPanel>
-                    </Button.Content>
-                </Button>-->
-
-                <!--<Button ToolTipService.ToolTip="Tutorial" Click="TutorialButtonClicked" FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE897;" FontSize="40" />-->
-                <!--<Button FontFamily="Segoe MDL2 Assets" Margin="10,0,0,0" Content="&#xE713;" FontSize="40" >
-                    <Button.Flyout>
-                        <baseCodeControls:SettingsFlyout Closed="UpdateSettingsClosed">
-                            
-                    </Button.Flyout>
-                </Button>-->
 
             </StackPanel>
             <Border BorderBrush="White" BorderThickness="2" HorizontalAlignment="Stretch" Grid.RowSpan="2">
                 <Pivot>
-                    <PivotItem Header="Baseline Images" Foreground="Black" >
+                    <PivotItem Header="Baseline Images" >
                         <ListView SelectionMode="Single" ItemsSource="{Binding Path=DisplayImages}" >
                             <ListView.ItemTemplate>
                                 <DataTemplate>

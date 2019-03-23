@@ -9,8 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
-    x:Name="mainPage"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    x:Name="mainPage">
 
     <NavigationView 
         PaneDisplayMode="LeftCompact" 

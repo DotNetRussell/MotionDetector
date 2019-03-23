@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage.Streams;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -25,10 +27,6 @@ namespace MotionDetector.Views
     /// </summary>
     public sealed partial class DashboardPage : Page
     {        
-        /// <summary>
-             /// This is the list of images that will be emailed to the recipient once the threshold has been met.
-             /// </summary>
-        private List<IRandomAccessStream> streamList { get; set; }
 
         public ConfigModel ConfigurationSettings { get; set; }
 
@@ -37,7 +35,15 @@ namespace MotionDetector.Views
         public DashboardPage()
         {
             this.InitializeComponent();
+            App.Current.LeavingBackground += Current_LeavingBackground;          
         }
+
+        private void Current_LeavingBackground(object sender, Windows.ApplicationModel.LeavingBackgroundEventArgs e)
+        {
+            // We need to reinitialize the media element every time someone minimizes and maxamizes the window
+            viewModel.Setup(captureElementControl);
+        }
+
         private void Setup()
         {
             viewModel = new MotionDetectorViewModel(); ;
@@ -58,11 +64,14 @@ namespace MotionDetector.Views
             Setup();
         }
 
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            (this.DataContext as MotionDetectorViewModel).Destroyer();
+            App.Current.LeavingBackground -= Current_LeavingBackground;
             base.OnNavigatedFrom(e);
         }
-
+        
         // This is probably the dumbest thing ever....
         // Command binding isn't working currently on buttons and flyout menu items.... 
         // Not sure why but this is a quick work around.
