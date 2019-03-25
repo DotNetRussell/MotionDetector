@@ -7,14 +7,39 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
+using Windows.Media.Capture;
+using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml.Controls;
 
 namespace MotionDetector.Utilities
 {
     public static class CameraServices
     {
+        private static LowLagPhotoCapture lowLagCapture = null;               
+
+        public static async Task<SoftwareBitmap> CaptureImage(MediaCapture MediaCaptureElement)
+        {
+            if(lowLagCapture == null)
+               lowLagCapture = await MediaCaptureElement.PrepareLowLagPhotoCaptureAsync(ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8));
+
+            try
+            {
+
+                CapturedPhoto capturedPhoto = await lowLagCapture.CaptureAsync();
+                SoftwareBitmap softwareBitmap = capturedPhoto.Frame.SoftwareBitmap;
+
+                return softwareBitmap;
+            }
+            catch
+            {
+                lowLagCapture = null;
+                return await CaptureImage(MediaCaptureElement);
+            }
+        }
+
 
         public static async void SaveImage(AlertDisplayImageModel SelectedAlertImage)
         {

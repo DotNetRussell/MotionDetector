@@ -26,8 +26,8 @@ namespace MotionDetector.ViewModels
         #region Bound Properties
 
         #region private backers
-        private int configVersion = 2;
         private bool _isAlert;
+        private bool _isAlertSoundRunning = false;
         private List<byte[]> baselineImages;
         private ObservableCollection<WriteableBitmap> _displayImages;
         private ObservableCollection<AlertDisplayImageModel> _alertDisplayImages;
@@ -62,6 +62,7 @@ namespace MotionDetector.ViewModels
 
         #region Command Bindings
         public ICommand SaveImageCommand { get; set; }
+        public ICommand StopAlertSoundCommand { get; set; }
         #endregion
 
         #endregion
@@ -80,7 +81,6 @@ namespace MotionDetector.ViewModels
         
         private DisplayRequest displayRequest { get; set; }
         
-        private LowLagPhotoCapture lowLagCapture { get; set; }
 
 
         /// <summary>
@@ -110,6 +110,7 @@ namespace MotionDetector.ViewModels
             AlertDisplayImages = new ObservableCollection<AlertDisplayImageModel>();
 
             SaveImageCommand = new CommandHandler(SaveImageExecuted);
+            StopAlertSoundCommand = new CommandHandler(StopAlertSoundExecuted);
         }
 
 
@@ -174,43 +175,11 @@ namespace MotionDetector.ViewModels
         /// Sets up the application and initializes the camera.
         /// </summary>
         public async void Setup()
-        {
-            ConfigModel config = new ConfigModel()
-            {
-                SmtpSettings = new SmtpSettingsModel()
-                {
-                    SmtpPort = 465,
-                    UseSSL = true,
-                },
-                AppConfig = new AppConfigModel()
-                {
-                    SendEmails = false,
-                    ImageDelta = 7,
-                    PixelDelta = .3,
-                    AlertThreshold = 2,
-                    AlertDelay = 2,
-                    CaptureDelay = 500,
-                    DarkShiftThreshold = 70,
-                    ConfigVersion = this.configVersion
-                }
-            };
+        {            
             try
             {
-                if (!await SaveManager.FileExists("config.json"))
-                {
-                    await SaveManager.SaveJsonFile("config.json", config);
-                }
 
-                // Apparently there's an edge case where if you create a config file and then attempt to read it right away,
-                // it won't exist yet. Doing this little wait and see check fixes it. This also only happens on first run.
-                while (!await SaveManager.FileExists("config.json")) { continue; }
-
-                ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
-
-                if (ConfigurationSettings.AppConfig.ConfigVersion < this.configVersion)
-                {
-                    await SaveManager.SaveJsonFile("config.json", config);
-                }
+                ConfigurationSettings = await ConfigurationServices.GetConfig();
 
                 InitializeCameraAndSink();
 
@@ -266,13 +235,7 @@ namespace MotionDetector.ViewModels
         {
             try
             {
-                lowLagCapture =
-                    await MediaCaptureElement.PrepareLowLagPhotoCaptureAsync(ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8));
-
-                CapturedPhoto capturedPhoto = await lowLagCapture.CaptureAsync();
-                SoftwareBitmap softwareBitmap = capturedPhoto.Frame.SoftwareBitmap;
-
-                await lowLagCapture.FinishAsync();
+                SoftwareBitmap softwareBitmap = await CameraServices.CaptureImage(MediaCaptureElement);
 
                 WriteableBitmap writeableBitmap = new WriteableBitmap(softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);
                 softwareBitmap.CopyToBuffer(writeableBitmap.PixelBuffer);
@@ -297,6 +260,32 @@ namespace MotionDetector.ViewModels
             }
         }
 
+        private void StopAlertSoundExecuted()
+        {
+            _isAlertSoundRunning = false;
+        }
+
+        private async void PlayAlertSound()
+        {
+            if (StoreServices.IsPremium && ConfigurationSettings.SoundConfig.PlaySounds && !_isAlertSoundRunning)
+            {
+                if (!ConfigurationSettings.SoundConfig.PlayContinuous)
+                {
+                    await SoundsServices.PlayAlertSound(ConfigurationSettings.SoundConfig.SoundName);
+                }
+                else
+                {
+                    _isAlertSoundRunning = true;
+
+                    while (_isAlertSoundRunning)
+                    {
+                        await SoundsServices.PlayAlertSound(ConfigurationSettings.SoundConfig.SoundName);
+                        await Task.Delay(new TimeSpan(0, 0, ConfigurationSettings.SoundConfig.ContinuousSecondDelay));
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Captures a photo and sends it off for analysis 
         /// </summary>
@@ -304,44 +293,36 @@ namespace MotionDetector.ViewModels
         {
             try
             {
-                lowLagCapture =
-                    await MediaCaptureElement.PrepareLowLagPhotoCaptureAsync(ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8));
-
-                CapturedPhoto capturedPhoto = await lowLagCapture.CaptureAsync();
-                SoftwareBitmap softwareBitmap = capturedPhoto.Frame.SoftwareBitmap;
-                await lowLagCapture.FinishAsync();
-
+                SoftwareBitmap softwareBitmap = await CameraServices.CaptureImage(MediaCaptureElement);
 
                 byte[] imageBytes = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
                 softwareBitmap.CopyToBuffer(imageBytes.AsBuffer());
 
                 bool isAlert = IsAlert = MotionServices.CheckForMotion(ConfigurationSettings, imageBytes, baselineImages);
 
-
                 if (isAlert)
                 {
+                    PlayAlertSound();
+
                     WriteableBitmap writeableBitmap = new WriteableBitmap(softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);
                     softwareBitmap.CopyToBuffer(writeableBitmap.PixelBuffer);
+
                     AlertDisplayImages.Add(new AlertDisplayImageModel() { AlertDisplayImage = writeableBitmap, AlertDisplayCaption = DateTime.Now.ToString() });
 
                     captureTimer.Stop();
                     await Task.Delay(new TimeSpan(0, 0, ConfigurationSettings.AppConfig.AlertDelay));
                     captureTimer.Start();
 
+                    InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
 
-                    // It seems silly that we need to capture a second image but the first image that was captured isn't in a format that can
-                    // be easily emailed. This being the case, I decided it'd just be easier to grab another capture in the correct format and 
-                    // email it off. The delta between the images is negligable 
-                    var stream = new InMemoryRandomAccessStream();
-                    await MediaCaptureElement.CapturePhotoToStreamAsync(ImageEncodingProperties.CreateJpeg(), stream);
-                    await Task.Delay(10);
+                    BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                    encoder.SetSoftwareBitmap(softwareBitmap);
+                    await encoder.FlushAsync();
                     streamList.Add(stream);
                     
                     if (ConfigurationSettings.AppConfig.SendEmails && streamList.Count > ConfigurationSettings.AppConfig.AlertThreshold)
                     {
-                        captureTimer.Stop();
                         await SMTPServices.SendAlertEmail(streamList, ConfigurationSettings);
-                        await Task.Delay(new TimeSpan(0, 1, 0));
                     }
                 }
             }

@@ -16,6 +16,7 @@ namespace MotionDetector.ViewModels
     {
         private bool _isNotRunningTest = true;
         public ICommand RunTestsCommand { get; set; }
+        public ICommand UpdateSettingsCommand { get; set; }
         public List<string> ServerOptions { get { return new List<string>() { "Gmail", "Yahoo", "Custom" }; } }
         public ConfigModel ConfigurationSettings { get; set; }
         public bool IsNotRunningTest
@@ -39,12 +40,14 @@ namespace MotionDetector.ViewModels
         private async void Setup()
         {
             RunTestsCommand = new CommandHandler(RunSMTPTestExecuted);
-            ConfigurationSettings = await SaveManager.GetJsonFile<ConfigModel>("config.json");
+            UpdateSettingsCommand = new CommandHandler(UpdateSettingsExecuted);
+
+            ConfigurationSettings = await ConfigurationServices.GetConfig();
             OnPropertyChanged("ConfigurationSettings");
             this.ConfigurationSettings.AppConfig.PropertyChanged += SettingsViewModel_PropertyChanged;
             this.ConfigurationSettings.SmtpSettings.PropertyChanged += SettingsViewModel_PropertyChanged;
         }
-
+        
         private void RunSMTPTestExecuted()
         {
             IsNotRunningTest = false;
@@ -52,9 +55,7 @@ namespace MotionDetector.ViewModels
         }
 
         private void SettingsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            UpdateSettingsExecuted();
-                       
+        {                       
             if (e.PropertyName == "PreferredSmtpServer")
             {
                 switch (ConfigurationSettings.SmtpSettings.PreferredSmtpServer)
@@ -71,9 +72,9 @@ namespace MotionDetector.ViewModels
             }
         }
 
-        private async void UpdateSettingsExecuted()
+        private void UpdateSettingsExecuted()
         {
-            await SaveManager.SaveJsonFile("config.json", ConfigurationSettings);
+            ConfigurationServices.SaveConfig(ConfigurationSettings);
         }
     }
 }

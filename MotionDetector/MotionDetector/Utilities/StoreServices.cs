@@ -20,25 +20,19 @@ namespace MotionDetector.Utilities
         public static LicenseInformation LicenseInformation = CurrentApp.LicenseInformation;
 #endif
         public static bool RemoveAds { get; set; }
+        public static bool IsPremium { get; set; }
 
         static StoreServices()
         {
             RemoveAds = false;
+            IsPremium = false;
         }
 
         public static async Task<bool> SetupDemoStore()
         {
-            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            // Remove these lines of code before publishing!
-            // The actual CurrentApp will create a WindowsStoreProxy.xml
-            // in the package's \LocalState\Microsoft\Windows Store\ApiData
-            // folder where it stores the actual purchases.
-            // Here we're just giving it a fake version of that file
-            // for testing.
             StorageFolder proxyDataFolder = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
             StorageFile proxyFile = await proxyDataFolder.GetFileAsync("test.xml");
             await CurrentAppSimulator.ReloadSimulatorAsync(proxyFile);
-            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
             LicenseInformation = CurrentAppSimulator.LicenseInformation;
 
@@ -51,6 +45,45 @@ namespace MotionDetector.Utilities
             {
                 RemoveAds = true;
             }
+        }
+
+        public static void CheckForPremiumStatus()
+        {
+            if (LicenseInformation.ProductLicenses["PremiumStatus"].IsActive)
+            {
+                IsPremium = RemoveAds = true;
+            }
+        }
+
+        public static async Task<bool> OpenStorePurchasePremium()
+        {
+            if (!LicenseInformation.ProductLicenses["PremiumStatus"].IsActive)
+            {
+                try
+                {
+#if DEBUG
+                    PurchaseResults results = await CurrentAppSimulator.RequestProductPurchaseAsync("PremiumStatus");
+#else
+                    PurchaseResults results = await CurrentApp.RequestProductPurchaseAsync("PremiumStatus");
+#endif
+
+                    if (results.Status == ProductPurchaseStatus.Succeeded || results.Status == ProductPurchaseStatus.AlreadyPurchased)
+                    {
+                        IsPremium = RemoveAds = true;                         
+                    }
+                }
+                catch (Exception)
+                {
+                    // The in-app purchase was not completed because
+                    // an error occurred.
+                }
+            }
+            else
+            {
+                IsPremium = RemoveAds = true;
+            }
+
+            return IsPremium;
         }
 
         public static async Task<bool> OpenStoreRemoveAds()

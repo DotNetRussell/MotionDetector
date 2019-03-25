@@ -12,15 +12,20 @@
     x:Name="mainPage">
 
     <NavigationView 
-        PaneDisplayMode="LeftCompact" 
+        PaneDisplayMode="Left"        
         x:Name="NavigationPane" 
         IsBackButtonVisible="Collapsed"
         ItemInvoked="NavigationPane_ItemInvoked">
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Dashboard" Icon="Camera" />
+            <NavigationViewItem Visibility="{Binding AdVisibility, UpdateSourceTrigger=PropertyChanged}" Content="Remove Ads $.99" Icon="StopSlideShow" />
+            <NavigationViewItem Visibility="{Binding PremiumVersionVisibility, UpdateSourceTrigger=PropertyChanged}" Content="Unlock Premium Version $1.99" Icon="Permissions" />
+            <NavigationViewItem IsEnabled="{Binding PremiumFeatures}" Content="Go into Hidden Mode" Icon="BackToWindow" />
+            <NavigationViewItem IsEnabled="{Binding PremiumFeatures}"  Content="Select Alert Sounds" Icon="Audio" />
+            <!--<NavigationViewItem IsEnabled="{Binding PremiumFeatures}"  Content="Define Custom Alert Area" Icon="Crop" />
+            <NavigationViewItem IsEnabled="{Binding PremiumFeatures}"  Content="Schedule Active Hours" Icon="Clock" />-->
             <NavigationViewItem Content="About" Icon="Help" />
             <NavigationViewItem Content="Tutorial" Icon="World" />
-            <NavigationViewItem Content="Remove Ads" Icon="Permissions" />
         </NavigationView.MenuItems>
         <Grid>
             <Grid.RowDefinitions>

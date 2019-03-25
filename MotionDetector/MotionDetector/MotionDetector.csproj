@@ -109,15 +109,26 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\SmtpSettingsModel.cs" />
+    <Compile Include="Models\SoundConfigModel.cs" />
+    <Compile Include="Models\TutorialModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\CameraServices.cs" />
+    <Compile Include="Utilities\ConfigurationServices.cs" />
     <Compile Include="Utilities\MotionServices.cs" />
     <Compile Include="Utilities\SMTPServices.cs" />
+    <Compile Include="Utilities\SoundsServices.cs" />
     <Compile Include="Utilities\StoreServices.cs" />
     <Compile Include="ViewModels\MotionDetectorViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="ViewModels\SoundSetupViewModel.cs" />
+    <Compile Include="Views\AlertSoundsPage.xaml.cs">
+      <DependentUpon>AlertSoundsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\DashboardPage.xaml.cs">
       <DependentUpon>DashboardPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\HiddenModeDashboardPage.xaml.cs">
+      <DependentUpon>HiddenModeDashboardPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
@@ -141,6 +152,20 @@
     <Content Include="Assets\SmallTile.scale-150.png" />
     <Content Include="Assets\SmallTile.scale-200.png" />
     <Content Include="Assets\SmallTile.scale-400.png" />
+    <Content Include="Assets\Sounds\mutedphonealert.wav" />
+    <Content Include="Assets\Sounds\mono-jahoma-generated.wav" />
+    <Content Include="Assets\Sounds\vincentm400__alert.mp3" />
+    <Content Include="Assets\Sounds\vibratingalert.wav" />
+    <Content Include="Assets\Sounds\hint.wav" />
+    <Content Include="Assets\Sounds\chippy-alarm.wav" />
+    <Content Include="Assets\Sounds\score-counter-01.wav" />
+    <Content Include="Assets\Sounds\8-bit-alarm.wav" />
+    <Content Include="Assets\Sounds\sci-fi-alert-04.wav" />
+    <Content Include="Assets\Sounds\chime-notification.wav" />
+    <Content Include="Assets\Sounds\spaceship1.wav" />
+    <Content Include="Assets\Sounds\doorbell-ring.wav" />
+    <Content Include="Assets\Sounds\recepcion-mensaje-s-anel-alejandri.wav" />
+    <Content Include="Assets\Sounds\dodgy-c-alert-sound.wav" />
     <Content Include="Assets\SplashScreen.scale-100.png" />
     <Content Include="Assets\SplashScreen.scale-125.png" />
     <Content Include="Assets\SplashScreen.scale-150.png" />
@@ -190,7 +215,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\AlertSoundsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\DashboardPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\HiddenModeDashboardPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -226,6 +259,7 @@
       <Name>BasecodeLibrary</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

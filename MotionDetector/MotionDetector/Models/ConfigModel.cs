@@ -6,5 +6,6 @@ namespace Models.MotionDetector
     {
         public SmtpSettingsModel SmtpSettings { get; set; }
         public AppConfigModel AppConfig { get; set; }
+        public SoundConfigModel SoundConfig { get; set; }
     }
 }

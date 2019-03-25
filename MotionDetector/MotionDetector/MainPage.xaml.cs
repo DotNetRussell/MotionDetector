@@ -22,6 +22,8 @@ using RussLib.Pages;
 using MotionDetector.Views;
 using MotionDetector.Utilities;
 using Windows.UI.Core;
+using Windows.UI.Popups;
+using MotionDetector.Models;
 
 namespace MotionDetector
 {
@@ -35,7 +37,31 @@ namespace MotionDetector
             get { return _AdVisibility; }
             set { _AdVisibility = value; OnPropertyChanged("AdVisibility"); }
         }
-        
+
+        private Visibility _PremiumVersionVisibility;
+
+        public Visibility PremiumVersionVisibility
+        {
+            get { return _PremiumVersionVisibility; }
+            set { _PremiumVersionVisibility = value; OnPropertyChanged("PremiumVersionVisibility"); }
+        }
+
+        private TutorialModel _tutorialModels = null;
+
+        private bool _premiumFeatures;
+
+        public bool PremiumFeatures
+        {
+            get { return _premiumFeatures; }
+            set
+            {
+                _premiumFeatures = value;
+                PremiumVersionVisibility = _premiumFeatures ? Visibility.Collapsed : Visibility.Visible;
+                OnPropertyChanged("PremiumFeatures");
+            }
+        }
+
+
         public MainPage()
         {
             AdVisibility = Visibility.Visible;
@@ -54,26 +80,96 @@ namespace MotionDetector
             await StoreServices.SetupDemoStore();
 #endif 
             StoreServices.CheckFreemiumStatus();
-            AdVisibility = StoreServices.RemoveAds ? Visibility.Collapsed : Visibility.Visible;
+            StoreServices.CheckForPremiumStatus();
+
+            AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
+            PremiumFeatures = StoreServices.IsPremium;
+
+            _tutorialModels = await ConfigurationServices.GetTutorialLinks();
 
             this.DataContext = this;
         }
 
+        private async void ShowPayWall()
+        {
+            MessageDialog dialog = new MessageDialog("");
+            dialog.Commands.Add(new UICommand("Go Premium") { Id = 0 });
+            dialog.Commands.Add(new UICommand("Stay Free but Weeeaaaakkk") { Id = 1 });
+            dialog.Content = "In order to use this feature you must have the Premium Version.";
+            dialog.Title = "Woah, hold on partner!";
+            var result = await dialog.ShowAsync();
+            if(result != null && (int)result.Id == 0 )
+            {
+                PremiumFeatures = await StoreServices.OpenStorePurchasePremium();
+                AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
+                
+            }
+        }
+
         private async void NavigationPane_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
+            NavigationPane.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
             switch (args.InvokedItem)
             {
+                case ("Unlock Premium Version $1.99"):
+                    PremiumFeatures = await StoreServices.OpenStorePurchasePremium();
+                    AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
+                    break;
+                case ("Go into Hidden Mode"):
+                    if (!PremiumFeatures)
+                    {
+                        ShowPayWall();
+                    }
+                    else
+                    {
+                        NavigationPane.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftMinimal;
+                        MainDisplayFrame.Navigate(typeof(HiddenModeDashboardPage));
+                    }
+                    break;
+                case ("Select Alert Sounds"):
+                    if (!PremiumFeatures)
+                    {
+                        ShowPayWall();
+                    }
+                    else
+                    {
+                        MainDisplayFrame.Navigate(typeof(AlertSoundsPage));
+                    }
+                    break;
+                case ("Schedule Active Hours"):
+                    if (!PremiumFeatures)
+                    {
+                        ShowPayWall();
+                    }
+                    break;
+                case ("Define Custom Alert Area"):
+                    if (!PremiumFeatures)
+                    {
+                        ShowPayWall();
+                    }
+                    break;
                 case ("Dashboard"):
-                    MainDisplayFrame.Navigate(typeof(DashboardPage));
+                    if (MainDisplayFrame.CurrentSourcePageType != typeof(DashboardPage) )
+                    {
+                        MainDisplayFrame.Navigate(typeof(DashboardPage));
+                    }
                     break;
                 case ("About"):
                     MainDisplayFrame.Navigate(typeof(AboutPage));
                     break;
-                case ("Remove Ads"):
+                case ("Remove Ads $.99"):
                     AdVisibility = await StoreServices.OpenStoreRemoveAds() ? Visibility.Collapsed : Visibility.Visible;
                     break;
                 case ("Tutorial"):
-                    Uri youtubeTutorial = new Uri(@"https://youtu.be/EpaH1thk4IA");
+                    Uri youtubeTutorial;
+                    if (_tutorialModels != null)
+                    {
+                        youtubeTutorial = new Uri(_tutorialModels.TutorialLinkOne);
+                    }
+                    else
+                    {
+                        youtubeTutorial = new Uri(@"https://youtu.be/EpaH1thk4IA");
+                    }
                     await Windows.System.Launcher.LaunchUriAsync(youtubeTutorial);
                     break;
                 default:
@@ -85,7 +181,10 @@ namespace MotionDetector
                             break;
                         }
                     }
-                    MainDisplayFrame.Navigate(typeof(DashboardPage));
+                    else if (MainDisplayFrame.CurrentSourcePageType != typeof(DashboardPage))
+                    {
+                        MainDisplayFrame.Navigate(typeof(DashboardPage));
+                    }
                     break;
             }
         }
