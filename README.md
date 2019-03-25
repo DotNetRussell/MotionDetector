@@ -9,4 +9,6 @@ This app has the following features:
 - Customizable alert image threshold for emails.
 - The ability to send emails when your threshold is hit.
 
-<img src="https://i.imgur.com/rjNdozS.jpg"/>
+<img src="https://i.imgur.com/X65PDf5.jpg"/>
+<img src="https://i.imgur.com/1Md5HNY.jpg"/>
+<img src="https://i.imgur.com/WdHwaBU.jpg"/>
