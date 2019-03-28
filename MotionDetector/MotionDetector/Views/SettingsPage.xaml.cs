@@ -1,4 +1,6 @@
-﻿using MotionDetector.ViewModels;
+﻿using MotionDetector.Models;
+using MotionDetector.Utilities;
+using MotionDetector.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,10 +25,31 @@ namespace MotionDetector.Views
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
+        private TutorialModel _tutorialModels = null;
         public SettingsPage()
         {
             this.InitializeComponent();
             this.DataContext = new SettingsViewModel();
+            this.Loaded += SettingsPage_Loaded;
+        }
+
+        private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            _tutorialModels = await ConfigurationServices.GetTutorialLinks();
+        }
+
+        private async void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            Uri youtubeTutorial;
+            if (_tutorialModels != null)
+            {
+                youtubeTutorial = new Uri(_tutorialModels.TutorialLinkTwo);
+            }
+            else
+            {
+                youtubeTutorial = new Uri(@"https://youtu.be/EpaH1thk4IA");
+            }
+            await Windows.System.Launcher.LaunchUriAsync(youtubeTutorial);
         }
     }
 }

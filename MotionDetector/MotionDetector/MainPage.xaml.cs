@@ -24,12 +24,14 @@ using MotionDetector.Utilities;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using MotionDetector.Models;
+using Microsoft.ApplicationInsights.Extensibility;
+using System.Diagnostics;
+using Microsoft.ApplicationInsights;
 
 namespace MotionDetector
 {
-    public sealed partial class MainPage : BaseCodePageContainer, INotifyPropertyChanged
+    public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
-
         private Visibility _AdVisibility;
 
         public Visibility AdVisibility
@@ -50,6 +52,8 @@ namespace MotionDetector
 
         private bool _premiumFeatures;
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public bool PremiumFeatures
         {
             get { return _premiumFeatures; }
@@ -68,6 +72,11 @@ namespace MotionDetector
 
             this.InitializeComponent();
             this.Loaded += MainPage_Loaded;
+
+            AppDomain.CurrentDomain.UnhandledException += (s, a) => { Telemetry.TrackException(a.ExceptionObject as Exception); };
+            TaskScheduler.UnobservedTaskException += (s, a) => { Telemetry.TrackException(a.Exception); };
+            Application.Current.UnhandledException += (s, a) => { Telemetry.TrackException(a.Exception); };
+            
         }
 
 
@@ -186,6 +195,16 @@ namespace MotionDetector
                         MainDisplayFrame.Navigate(typeof(DashboardPage));
                     }
                     break;
+            }
+        }
+
+        public void OnPropertyChanged(String prop)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+
+            if (handler != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(prop));
             }
         }
     }

@@ -150,25 +150,29 @@ namespace MotionDetector.ViewModels
 
         public async void InitializeCameraAndSink()
         {
-            // If the element isn't null and it's just not streaming, that means we're still initializing it
-            // don't reinitialize it or it'll explode. This is a side effect of the backgrounding shit
-            // we need to do
-            if (MediaCaptureElement != null
-                && MediaCaptureElement.CameraStreamState == CameraStreamState.NotStreaming)
+            try
             {
-                return;
+                // If the element isn't null and it's just not streaming, that means we're still initializing it
+                // don't reinitialize it or it'll explode. This is a side effect of the backgrounding shit
+                // we need to do
+                if (MediaCaptureElement != null
+                    && MediaCaptureElement.CameraStreamState == CameraStreamState.NotStreaming)
+                {
+                    return;
+                }
+
+                MediaCaptureElement = new MediaCapture();
+                DisplayRequest _displayRequest = new DisplayRequest();
+
+                //make request to put in active state
+                _displayRequest.RequestActive();
+
+                await MediaCaptureElement.InitializeAsync();
+                caputureSink.Source = MediaCaptureElement;
+
+                await MediaCaptureElement.StartPreviewAsync();
             }
-
-            MediaCaptureElement = new MediaCapture();
-            DisplayRequest _displayRequest = new DisplayRequest();
-
-            //make request to put in active state
-            _displayRequest.RequestActive();
-
-            await MediaCaptureElement.InitializeAsync();
-            caputureSink.Source = MediaCaptureElement;
-
-            await MediaCaptureElement.StartPreviewAsync();
+            catch { }
         }
 
         /// <summary>

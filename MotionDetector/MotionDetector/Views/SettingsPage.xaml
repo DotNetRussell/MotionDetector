@@ -152,7 +152,7 @@
                 Text="{Binding ConfigurationSettings.AppConfig.DarkShiftThreshold, 
                 Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-            <HyperlinkButton HorizontalAlignment="Right" Grid.Column="1" Grid.Row="14">Click Here For a Configuration Tutorial</HyperlinkButton>
+            <HyperlinkButton Click="HyperlinkButton_Click" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="14">Click Here For a Configuration Tutorial</HyperlinkButton>
             
             <Button 
                 Grid.Column="0" Grid.Row="14"
