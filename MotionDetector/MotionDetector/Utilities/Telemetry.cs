@@ -12,7 +12,7 @@ namespace MotionDetector.Utilities
 {
     public static class Telemetry
     {
-        private const string TelemetryKey = "redacted-so-people-don't-use-my-key";
+        private const string TelemetryKey = "redacted";
 
         private static TelemetryClient _telemetry = GetAppInsightsClient();
 
@@ -50,6 +50,11 @@ namespace MotionDetector.Utilities
                 _telemetry.TrackException(telex);
                 Flush();
             }
+        }
+
+        public static void RegisterNode()
+        {
+            TrackEvent("New Node Online: " + _telemetry.Context.User.Id);
         }
 
         internal static void Flush()

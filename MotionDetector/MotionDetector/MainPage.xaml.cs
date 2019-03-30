@@ -94,7 +94,17 @@ namespace MotionDetector
             AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
             PremiumFeatures = StoreServices.IsPremium;
 
-            _tutorialModels = await ConfigurationServices.GetTutorialLinks();
+            try
+            {
+                Telemetry.RegisterNode();
+                _tutorialModels = await ConfigurationServices.GetTutorialLinks();
+            }
+            catch
+            {
+                //if this fails we want to eat it silently. 
+                //we have a backup for tutorials null and 
+                //the user doesn't care about telemetry
+            }
 
             this.DataContext = this;
         }
