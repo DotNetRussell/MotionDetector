@@ -127,7 +127,6 @@ namespace MotionDetector
 
         private async void NavigationPane_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            NavigationPane.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
             switch (args.InvokedItem)
             {
                 case ("Unlock Premium Version $1.99"):
@@ -141,7 +140,6 @@ namespace MotionDetector
                     }
                     else
                     {
-                        NavigationPane.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftMinimal;
                         MainDisplayFrame.Navigate(typeof(HiddenModeDashboardPage));
                     }
                     break;

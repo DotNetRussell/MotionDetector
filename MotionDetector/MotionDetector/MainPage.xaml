@@ -10,8 +10,7 @@
     NavigationCacheMode="Required"
     x:Name="mainPage">
 
-    <NavigationView 
-        PaneDisplayMode="Left"        
+    <NavigationView       
         x:Name="NavigationPane" 
         IsBackButtonVisible="Collapsed"
         ItemInvoked="NavigationPane_ItemInvoked">
