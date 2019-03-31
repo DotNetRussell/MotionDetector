@@ -116,14 +116,18 @@ namespace MotionDetector.ViewModels
 
         public void Destroyer()
         {
-            MediaCaptureElement.StopPreviewAsync();
-            MediaCaptureElement.Dispose();
+            MediaCaptureElement?.StopPreviewAsync();
+            MediaCaptureElement?.Dispose();
             MediaCaptureElement = null;
             baselineImages = null;
-            captureTimer.Stop();
+            captureTimer?.Stop();
 
-            baselineTimer.Tick -= OnBaselineTimerTick;
-            captureTimer.Tick -= OnCaptureTimerTick;
+            if(baselineTimer != null && captureTimer != null)
+            {
+                //for some reason I can't use the null check operator with events? Super weird 
+                baselineTimer.Tick -= OnBaselineTimerTick;
+                captureTimer.Tick -= OnCaptureTimerTick;
+            }
 
             displayRequest = null;
             streamList = null;
