@@ -11,7 +11,7 @@
     <AssemblyName>MotionDetector</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.17134.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.18362.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -253,10 +253,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AppInsights.WindowsDesktop\AppInsights.WindowsDesktop\AppInsights.WindowsDesktop.csproj">
-      <Project>{73c67afa-dfad-4223-b2a6-a8b119d39dec}</Project>
-      <Name>AppInsights.WindowsDesktop</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\RussLib\RussLib\RussLib.csproj">
       <Project>{ad9fdad7-c945-4e67-b1d6-cadbe27a45ba}</Project>
       <Name>RussLib</Name>
@@ -266,7 +262,6 @@
       <Name>BasecodeLibrary</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

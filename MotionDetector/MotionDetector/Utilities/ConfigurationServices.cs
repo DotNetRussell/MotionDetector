@@ -1,12 +1,6 @@
 ﻿using BasecodeLibrary.Utilities;
 using Models.MotionDetector;
 using MotionDetector.Models;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MotionDetector.Utilities
@@ -20,11 +14,18 @@ namespace MotionDetector.Utilities
         
         public static async Task<TutorialModel> GetTutorialLinks()
         {
-            using (WebClient client = new WebClient())
+            // muh webserver died and now it's broke :cry-emoji:
+            //using (WebClient client = new WebClient())
+            //{
+            //    string result = await client.DownloadStringTaskAsync(new Uri("https://DotNetRussell.com/umde.json"));
+            //    return JsonConvert.DeserializeObject<TutorialModel>(result);
+            //}
+
+            return new TutorialModel()
             {
-                string result = await client.DownloadStringTaskAsync(new Uri("https://DotNetRussell.com/umde.json"));
-                return JsonConvert.DeserializeObject<TutorialModel>(result);
-            }
+                TutorialLinkOne = "https://www.youtube.com/watch?v=-xRucA-vsbA",
+                TutorialLinkTwo = "https://www.youtube.com/watch?v=E1hWwEhwlCY"
+            };
         }
 
         public static async Task<ConfigModel> GetConfig()
