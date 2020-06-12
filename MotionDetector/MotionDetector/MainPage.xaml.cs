@@ -27,6 +27,7 @@ using MotionDetector.Models;
 using Microsoft.ApplicationInsights.Extensibility;
 using System.Diagnostics;
 using Microsoft.ApplicationInsights;
+using Windows.ApplicationModel.Store;
 
 namespace MotionDetector
 {
@@ -72,11 +73,6 @@ namespace MotionDetector
 
             this.InitializeComponent();
             this.Loaded += MainPage_Loaded;
-
-            AppDomain.CurrentDomain.UnhandledException += (s, a) => { Telemetry.TrackException(a.ExceptionObject as Exception); };
-            TaskScheduler.UnobservedTaskException += (s, a) => { Telemetry.TrackException(a.Exception); };
-            Application.Current.UnhandledException += (s, a) => { Telemetry.TrackException(a.Exception); };
-            
         }
 
 
@@ -84,19 +80,17 @@ namespace MotionDetector
         {
             MainDisplayFrame.Navigate(typeof(DashboardPage));
 
-//For DEMO only
-#if DEBUG
-            await StoreServices.SetupDemoStore();
-#endif 
-            StoreServices.CheckFreemiumStatus();
-            StoreServices.CheckForPremiumStatus();
-
-            AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
-            PremiumFeatures = StoreServices.IsPremium;
-
             try
             {
-                Telemetry.RegisterNode();
+                await StoreServices.SetupStoreServices();
+
+                LicenseInformation LicenseInformation = CurrentApp.LicenseInformation;
+                StoreServices.CheckFreemiumStatus();
+                StoreServices.CheckForPremiumStatus();
+
+                AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
+                PremiumFeatures = StoreServices.IsPremium;
+   
                 _tutorialModels = await ConfigurationServices.GetTutorialLinks();
             }
             catch

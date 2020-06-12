@@ -22,9 +22,9 @@
     <AppIconSource>C:\Users\Anthony\Desktop\2.png</AppIconSource>
     <SplashScreenSource>C:\Users\Anthony\Desktop\2.png</SplashScreenSource>
     <PackageLogoSource>C:\Users\Anthony\Desktop\2.png</PackageLogoSource>
-    <AppxShowAllApps>False</AppxShowAllApps>
+    <AppxShowAllApps>True</AppxShowAllApps>
     <AppxPackageIsForStore>True</AppxPackageIsForStore>
-    <AppxBuildConfigurationSelection>x86|x64|arm</AppxBuildConfigurationSelection>
+    <AppxBuildConfigurationSelection>x64</AppxBuildConfigurationSelection>
     <PackageOptionalProjectsInIdeBuilds>True</PackageOptionalProjectsInIdeBuilds>
     <UapAppxPackageBuildMode>StoreOnly</UapAppxPackageBuildMode>
   </PropertyGroup>
@@ -38,5 +38,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <DeviceId>5E4701F2-7B83-49E8-A957-7EF76386E745</DeviceId>
     <UseEmulator>false</UseEmulator>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <CreateCleanLayout>false</CreateCleanLayout>
   </PropertyGroup>
 </Project>

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" IgnorableNamespaces="uap mp uap3">
-  <Identity Name="24191RTApplications.UniversalMotionDetectorElite" Publisher="CN=Anthony" Version="4.0.0.0" />
-  <mp:PhoneIdentity PhoneProductId="7181f667-5db3-4294-a20f-df34a92fc85b" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="24191RTApplications.UniversalMotionDetectorElite" Publisher="CN=B7F603A8-3B52-4E89-BA88-7460AE808D08" Version="5.0.2.0" />
+  <mp:PhoneIdentity PhoneProductId="2bed2025-612d-445e-a970-dc72cd7b29c6" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Universal Motion Detector Elite</DisplayName>
     <PublisherDisplayName>RT Apps</PublisherDisplayName>

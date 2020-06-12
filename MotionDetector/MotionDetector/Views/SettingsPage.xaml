@@ -36,7 +36,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="60"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -152,7 +152,10 @@
                 Text="{Binding ConfigurationSettings.AppConfig.DarkShiftThreshold, 
                 Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-            <HyperlinkButton Click="HyperlinkButton_Click" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="14">Click Here For a Configuration Tutorial</HyperlinkButton>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="14" >
+                <HyperlinkButton Click="BrowseToYoutubeTutorial">Click Here For a Configuration Tutorial</HyperlinkButton>
+                <HyperlinkButton Click="BrowseToGmailSecurity">Click Here to enable gmail accounts</HyperlinkButton>               
+            </StackPanel>
             
             <Button 
                 Grid.Column="0" Grid.Row="14"

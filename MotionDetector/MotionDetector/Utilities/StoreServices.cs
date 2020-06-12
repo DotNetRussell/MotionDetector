@@ -1,23 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Windows.Services.Store;
+using System.ServiceModel;
+#if DEBUG
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Store;
-using Windows.Services.Store;
 using Windows.Storage;
-using Windows.System;
+#endif
 
 namespace MotionDetector.Utilities
 {
     public static class StoreServices
     {
 #if DEBUG
-
-        public static LicenseInformation LicenseInformation = CurrentAppSimulator.LicenseInformation;
+        public static LicenseInformation LicenseInformation { get; private set; }
 #else
-        public static LicenseInformation LicenseInformation = CurrentApp.LicenseInformation;
+        static StoreAppLicense _appLicense = null;
 #endif
         public static bool RemoveAds { get; set; }
         public static bool IsPremium { get; set; }
@@ -28,48 +26,103 @@ namespace MotionDetector.Utilities
             IsPremium = false;
         }
 
-        public static async Task<bool> SetupDemoStore()
+        public static async Task<bool> SetupStoreServices()
         {
-            StorageFolder proxyDataFolder = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
-            StorageFile proxyFile = await proxyDataFolder.GetFileAsync("test.xml");
-            await CurrentAppSimulator.ReloadSimulatorAsync(proxyFile);
+            try
+            {
+#if DEBUG
+                StorageFolder proxyDataFolder = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
+                StorageFile proxyFile = await proxyDataFolder.GetFileAsync("test.xml");
+                await CurrentAppSimulator.ReloadSimulatorAsync(proxyFile);
 
-            LicenseInformation = CurrentAppSimulator.LicenseInformation;
-
-            return true;
+                LicenseInformation = CurrentAppSimulator.LicenseInformation;
+#else  
+                var context = StoreContext.GetDefault();
+                _appLicense = await context.GetAppLicenseAsync();
+#endif
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static void CheckFreemiumStatus()
         {
+#if DEBUG
             if (LicenseInformation.ProductLicenses["RemoveAds"].IsActive)
             {
                 RemoveAds = true;
             }
+#else
+            var subscriptionStoreId = "9NV9QN9LX9FG";
+
+            foreach (var addOnLicense in _appLicense.AddOnLicenses)
+            {
+                StoreLicense license = addOnLicense.Value;
+                if (license.SkuStoreId.StartsWith(subscriptionStoreId))
+                {
+                    if (license.IsActive)
+                    {
+                        RemoveAds = true;
+                        return;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            RemoveAds = false;
+#endif
         }
 
         public static void CheckForPremiumStatus()
         {
+#if DEBUG
             if (LicenseInformation.ProductLicenses["PremiumStatus"].IsActive)
             {
                 IsPremium = RemoveAds = true;
             }
+#else
+            var subscriptionStoreId = "9PMT47KC5W6C";
+
+            foreach (var addOnLicense in _appLicense.AddOnLicenses)
+            {
+                StoreLicense license = addOnLicense.Value;
+                if (license.SkuStoreId.StartsWith(subscriptionStoreId))
+                {
+                    if (license.IsActive)
+                    {
+                        IsPremium = RemoveAds = true;
+                        return;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            IsPremium = RemoveAds = false;
+#endif
         }
 
         public static async Task<bool> OpenStorePurchasePremium()
         {
+#if DEBUG
             if (!LicenseInformation.ProductLicenses["PremiumStatus"].IsActive)
             {
                 try
                 {
-#if DEBUG
+
                     PurchaseResults results = await CurrentAppSimulator.RequestProductPurchaseAsync("PremiumStatus");
-#else
-                    PurchaseResults results = await CurrentApp.RequestProductPurchaseAsync("PremiumStatus");
-#endif
 
                     if (results.Status == ProductPurchaseStatus.Succeeded || results.Status == ProductPurchaseStatus.AlreadyPurchased)
                     {
-                        IsPremium = RemoveAds = true;                         
+                        IsPremium = RemoveAds = true;
                     }
                 }
                 catch (Exception)
@@ -82,21 +135,55 @@ namespace MotionDetector.Utilities
             {
                 IsPremium = RemoveAds = true;
             }
+#else
+            var context = StoreContext.GetDefault();
+            StoreProduct subscriptionStoreProduct = null; 
+            StoreProductQueryResult result = await context.GetAssociatedStoreProductsAsync(new string[] { "Durable" });
 
+            var subscriptionStoreId = "9PMT47KC5W6C";
+            foreach (var item in result.Products)
+            {
+                StoreProduct product = item.Value;
+                if (product.StoreId == subscriptionStoreId)
+                {
+                    subscriptionStoreProduct = product;
+                }
+            }
+
+            // Load the sellable add-ons for this app and check if the trial is still 
+            // available for this customer. If they previously acquired a trial they won't 
+            // be able to get a trial again, and the StoreProduct.Skus property will 
+            // only contain one SKU.
+            StorePurchaseResult purchaseResult = await subscriptionStoreProduct?.RequestPurchaseAsync();
+            switch (purchaseResult.Status)
+            {
+                case StorePurchaseStatus.AlreadyPurchased:
+                case StorePurchaseStatus.Succeeded:
+                    IsPremium = true;
+                    break;
+
+                case StorePurchaseStatus.NotPurchased:
+                case StorePurchaseStatus.ServerError:
+                case StorePurchaseStatus.NetworkError:
+                    IsPremium = false;
+                    break;
+                default:
+                    IsPremium = false;
+                    break;
+            }
+#endif
             return IsPremium;
         }
 
         public static async Task<bool> OpenStoreRemoveAds()
         {
+#if DEBUG
             if (!LicenseInformation.ProductLicenses["RemoveAds"].IsActive)
             {
                 try
                 {
-#if DEBUG
+
                     PurchaseResults results = await CurrentAppSimulator.RequestProductPurchaseAsync("RemoveAds");
-#else
-                    PurchaseResults results = await CurrentApp.RequestProductPurchaseAsync("RemoveAds");
-#endif
 
                     if (results.Status == ProductPurchaseStatus.Succeeded || results.Status == ProductPurchaseStatus.AlreadyPurchased)
                     {
@@ -113,7 +200,43 @@ namespace MotionDetector.Utilities
             {
                 RemoveAds = true;
             }
+#else
+            var context = StoreContext.GetDefault();
+            StoreProduct subscriptionStoreProduct = null; 
+            StoreProductQueryResult result = await context.GetAssociatedStoreProductsAsync(new string[] { "Durable" });
 
+            var subscriptionStoreId = "9NV9QN9LX9FG";
+            foreach (var item in result.Products)
+            {
+                StoreProduct product = item.Value;
+                if (product.StoreId == subscriptionStoreId)
+                {
+                    subscriptionStoreProduct = product;
+                }
+            }
+
+            // Load the sellable add-ons for this app and check if the trial is still 
+            // available for this customer. If they previously acquired a trial they won't 
+            // be able to get a trial again, and the StoreProduct.Skus property will 
+            // only contain one SKU.
+            StorePurchaseResult purchaseResult = await subscriptionStoreProduct?.RequestPurchaseAsync();
+            switch (purchaseResult.Status)
+            {
+                case StorePurchaseStatus.AlreadyPurchased:
+                case StorePurchaseStatus.Succeeded:
+                    RemoveAds = true;
+                    break;
+
+                case StorePurchaseStatus.NotPurchased:
+                case StorePurchaseStatus.ServerError:
+                case StorePurchaseStatus.NetworkError:
+                    RemoveAds = false;
+                    break;
+                default:
+                    RemoveAds = false;
+                    break;
+            }
+#endif
             return RemoveAds;
         }
     }

@@ -2,21 +2,8 @@
 using MotionDetector.Utilities;
 using MotionDetector.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace MotionDetector.Views
 {
@@ -38,7 +25,7 @@ namespace MotionDetector.Views
             _tutorialModels = await ConfigurationServices.GetTutorialLinks();
         }
 
-        private async void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        private async void BrowseToYoutubeTutorial(object sender, RoutedEventArgs e)
         {
             Uri youtubeTutorial;
             if (_tutorialModels != null)
@@ -50,6 +37,12 @@ namespace MotionDetector.Views
                 youtubeTutorial = new Uri(@"https://youtu.be/EpaH1thk4IA");
             }
             await Windows.System.Launcher.LaunchUriAsync(youtubeTutorial);
+        }
+
+        private async void BrowseToGmailSecurity(object sender, RoutedEventArgs e)
+        {
+            Uri gmailSecurityUri = new Uri(@"https://myaccount.google.com/lesssecureapps");            
+            await Windows.System.Launcher.LaunchUriAsync(gmailSecurityUri);
         }
     }
 }

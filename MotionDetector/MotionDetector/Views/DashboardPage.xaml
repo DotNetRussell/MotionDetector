@@ -91,7 +91,7 @@
 
             </Border>
         </Grid>
-        <baseCodeControls:RateReminder x:Name="rateReminder" ReminderTrigger="3"  />
+        <baseCodeControls:RateReminder x:Name="rateReminder" ReminderTrigger="3"/>
 
     </Grid>
 </Page>
