@@ -11,10 +11,8 @@ using System.Windows.Input;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Devices;
-using Windows.Media.MediaProperties;
 using Windows.Storage.Streams;
 using Windows.System.Display;
-using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -138,7 +136,6 @@ namespace MotionDetector.ViewModels
         }
 
         #endregion
-
 
         #region Executed functions
 
