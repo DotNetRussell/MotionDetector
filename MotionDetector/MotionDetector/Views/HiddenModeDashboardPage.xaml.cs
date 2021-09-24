@@ -76,7 +76,7 @@ namespace MotionDetector.Views
                 {
                     DestinationAddress = "https://" + DestinationAddress;
                     webBrowser.Navigate(new Uri(DestinationAddress));
-                }
+                } 
             }
         }
 
