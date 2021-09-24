@@ -1,28 +1,22 @@
 ﻿using BasecodeLibrary.Utilities;
 using Models.MotionDetector;
 using MotionDetector.Utilities;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace MotionDetector.ViewModels
 {
     public class SoundSetupViewModel : ViewModelBase
     {
+        private string _selectedSound;
         private ConfigModel _ConfigurationSettings;
+        public ObservableCollection<string> AvailableSounds { get; set; }
 
         public ConfigModel ConfigurationSettings
         {
             get { return _ConfigurationSettings; }
-            set { _ConfigurationSettings = value; OnPropertyChanged("ConfigurationSettings"); }
+            set { _ConfigurationSettings = value; OnPropertyChanged(nameof(ConfigurationSettings)); }
         }
-
-        public ObservableCollection<string> AvailableSounds { get; set; }
-        private string _selectedSound;
 
         public string SelectedSound
         {
@@ -55,14 +49,17 @@ namespace MotionDetector.ViewModels
 
             SelectedSound = ConfigurationSettings.SoundConfig.SoundName;
         }
+
         private async void LoadCustomSoundExecuted()
         {
             await SoundsServices.ImportCustomSound();
 
             foreach (string sound in await SoundsServices.GetAvailableSounds())
             {
-                if(!AvailableSounds.Contains(sound))
+                if (!AvailableSounds.Contains(sound))
+                {
                     AvailableSounds.Add(sound);
+                }
             }
         }
 
@@ -71,13 +68,12 @@ namespace MotionDetector.ViewModels
             ConfigurationServices.SaveConfig(ConfigurationSettings);
         }
 
-        private void PlaySoundExecuted()
+        private async void PlaySoundExecuted()
         {
             if (SelectedSound != null)
             {
-                SoundsServices.PlayAlertSound(SelectedSound);
+                await SoundsServices.PlayAlertSound(SelectedSound);
             }
         }
-
     }
 }

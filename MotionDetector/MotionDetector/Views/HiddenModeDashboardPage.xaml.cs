@@ -1,5 +1,4 @@
-﻿using MotionDetector.ViewModels;
-using System;
+﻿using System;
 using System.ComponentModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -11,7 +10,6 @@ namespace MotionDetector.Views
     public sealed partial class HiddenModeDashboardPage : Page, INotifyPropertyChanged
     {
         private string _destinationAddress;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public string DestinationAddress
@@ -81,6 +79,7 @@ namespace MotionDetector.Views
                 }
             }
         }
+
         private void NavigateBack(object sender, RoutedEventArgs e)
         {
             if (webBrowser.CanGoBack)
@@ -88,7 +87,6 @@ namespace MotionDetector.Views
                 webBrowser.GoBack();
             }
         }
-
 
         private void OnPropertyChanged(string prop)
         {

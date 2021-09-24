@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Windows.Services.Store;
-using System.ServiceModel;
 #if DEBUG
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Store;

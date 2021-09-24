@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Storage;
@@ -14,11 +12,13 @@ namespace MotionDetector.Utilities
 {
     public static class SoundsServices
     {
+        private static MediaElement _mediaElement = new MediaElement();
+
         public static async Task<bool> ImportCustomSound()
         {
             FileOpenPicker picker = new FileOpenPicker();
-            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            picker.ViewMode = PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
             picker.FileTypeFilter.Add(".wav");
 
             StorageFile file = await picker.PickSingleFileAsync();
@@ -31,7 +31,6 @@ namespace MotionDetector.Utilities
             return true;
         }
 
-        private static MediaElement _mediaElement = new MediaElement();
         public static async Task<bool> PlayAlertSound(string sound)
         {
             if (string.IsNullOrEmpty(sound))

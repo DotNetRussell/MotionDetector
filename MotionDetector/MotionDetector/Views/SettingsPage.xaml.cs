@@ -20,9 +20,9 @@ namespace MotionDetector.Views
             this.Loaded += SettingsPage_Loaded;
         }
 
-        private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
+        private void SettingsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            _tutorialModels = await ConfigurationServices.GetTutorialLinks();
+            _tutorialModels = ConfigurationServices.GetTutorialLinks();
         }
 
         private async void BrowseToYoutubeTutorial(object sender, RoutedEventArgs e)

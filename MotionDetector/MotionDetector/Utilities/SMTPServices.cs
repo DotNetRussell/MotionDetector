@@ -1,10 +1,7 @@
 ﻿using LightBuzz.SMTP;
 using Models.MotionDetector;
-using MotionDetector.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Email;
 using Windows.Storage.Streams;
@@ -13,7 +10,6 @@ namespace MotionDetector.Utilities
 {
     public static class SMTPServices
     {
-
         public static async Task<SmtpResult> SendAlertEmail(List<IRandomAccessStream> streams, ConfigModel ConfigurationSettings)
         {
             string recipient = ConfigurationSettings.SmtpSettings.Recipient ?? String.Empty;
@@ -75,6 +71,5 @@ namespace MotionDetector.Utilities
                 }
             }
         }
-
     }
 }

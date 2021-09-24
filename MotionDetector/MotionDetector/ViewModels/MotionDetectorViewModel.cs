@@ -26,8 +26,8 @@ namespace MotionDetector.ViewModels
         #region private backers
         private bool _isAlert;
         private bool _isAlertSoundRunning = false;
-        private List<byte[]> baselineImages;
-        private AlertDisplayImageModel selectedAlertImage;
+        private List<byte[]> _baselineImages;
+        private AlertDisplayImageModel _selectedAlertImage;
         private ObservableCollection<WriteableBitmap> _displayImages;
         private ObservableCollection<AlertDisplayImageModel> _alertDisplayImages;
         #endregion
@@ -42,7 +42,7 @@ namespace MotionDetector.ViewModels
 
         public MediaCapture MediaCaptureElement { get; set; }
 
-        public AlertDisplayImageModel SelectedAlertImage { get => selectedAlertImage; set { selectedAlertImage = value; OnPropertyChanged(nameof(SelectedAlertImage)); } }
+        public AlertDisplayImageModel SelectedAlertImage { get => _selectedAlertImage; set { _selectedAlertImage = value; OnPropertyChanged(nameof(SelectedAlertImage)); } }
 
         /// <summary>
         /// The baseline images are what each newly captured image will be compared to.
@@ -97,7 +97,7 @@ namespace MotionDetector.ViewModels
 
         public MotionDetectorViewModel()
         {
-            baselineImages = new List<byte[]>();
+            _baselineImages = new List<byte[]>();
             captureTimer = new DispatcherTimer();
             baselineTimer = new DispatcherTimer();
             streamList = new List<IRandomAccessStream>();
@@ -124,7 +124,7 @@ namespace MotionDetector.ViewModels
                 MediaCaptureElement?.StopPreviewAsync();
                 MediaCaptureElement?.Dispose();
                 MediaCaptureElement = null;
-                baselineImages = null;
+                _baselineImages = null;
                 captureTimer?.Stop();
 
                 if (baselineTimer != null && captureTimer != null)
@@ -152,7 +152,6 @@ namespace MotionDetector.ViewModels
         {
             CameraServices.SaveImage(SelectedAlertImage);
         }
-
 
         #endregion
 
@@ -218,22 +217,20 @@ namespace MotionDetector.ViewModels
                 captureTimer.Interval = new TimeSpan(0, 0, 0, 0, ConfigurationSettings.AppConfig.CaptureDelay);
                 captureTimer.Tick += OnCaptureTimerTick;
             }
-            catch (Exception error)
+            catch
             {
                 //So for some reason on initial launch there's some race condition that happens in the above block
                 //it only happens on the initial launch and it only happens once.
                 //it's late, I'm sick, and I'm done trying to figure out the depths of this platform
                 //recursive call fixes it 
                 //<light match, drop match, walk away>
-                Setup();
+                await Setup();
             }
         }
-
 
         #endregion
 
         #region Private Functions
-
 
         private void OnCaptureTimerTick(object sender, object e)
         {
@@ -263,7 +260,7 @@ namespace MotionDetector.ViewModels
         {
             try
             {
-                if(baselineImages == null)
+                if(_baselineImages == null)
                 {
                     return;
                 }
@@ -276,17 +273,17 @@ namespace MotionDetector.ViewModels
                 byte[] imageBytes = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
                 softwareBitmap.CopyToBuffer(imageBytes.AsBuffer());
 
-                if (baselineImages.Count > 6)
+                if (_baselineImages.Count > 6)
                 {
-                    baselineImages.Clear();
+                    _baselineImages.Clear();
                     DisplayImages.Clear();
                 }
 
-                baselineImages.Add(imageBytes);
+                _baselineImages.Add(imageBytes);
                 DisplayImages.Add(writeableBitmap);
 
             }
-            catch (Exception error)
+            catch
             {
                 // Sometimes when you serial capture we get an explosion because the hardware isn't ready...
                 // Eat it and move on
@@ -331,7 +328,7 @@ namespace MotionDetector.ViewModels
                 byte[] imageBytes = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
                 softwareBitmap.CopyToBuffer(imageBytes.AsBuffer());
 
-                bool isAlert = IsAlert = MotionServices.CheckForMotion(ConfigurationSettings, imageBytes, baselineImages);
+                bool isAlert = IsAlert = MotionServices.CheckForMotion(ConfigurationSettings, imageBytes, _baselineImages);
 
                 if (isAlert)
                 {
@@ -359,12 +356,11 @@ namespace MotionDetector.ViewModels
                     }
                 }
             }
-            catch (Exception error)
+            catch
             {
                 // Getting random COM errors. Just eat it and continue. There's nothing I can do about this. 
             }
         }
-
 
         #endregion
     }

@@ -2,7 +2,6 @@
 
 namespace MotionDetector.Models
 {
-
     public class AppConfigModel : ModelBase
     {
         private bool _sendEmails;

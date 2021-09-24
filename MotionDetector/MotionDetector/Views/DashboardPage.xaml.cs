@@ -1,5 +1,4 @@
-﻿using Models.MotionDetector;
-using MotionDetector.Models;
+﻿using MotionDetector.Models;
 using MotionDetector.Utilities;
 using MotionDetector.ViewModels;
 using System.Windows.Input;
@@ -13,7 +12,6 @@ namespace MotionDetector.Views
 {
     public sealed partial class DashboardPage : Page
     {
-
         public ICommand InitializeCaptureSinkCommand
         {
             get { return (ICommand)GetValue(InitializeCaptureSinkProperty); }

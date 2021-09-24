@@ -5,22 +5,14 @@ using System.Threading.Tasks;
 
 namespace MotionDetector.Utilities
 {
-
     public static class ConfigurationServices
     {
         private static bool IsInitialized = false;
         private static ConfigModel ConfigurationSettings;
         private static int configVersion = 3;
         
-        public static async Task<TutorialModel> GetTutorialLinks()
+        public static TutorialModel GetTutorialLinks()
         {
-            // muh webserver died and now it's broke :cry-emoji:
-            //using (WebClient client = new WebClient())
-            //{
-            //    string result = await client.DownloadStringTaskAsync(new Uri("https://DotNetRussell.com/umde.json"));
-            //    return JsonConvert.DeserializeObject<TutorialModel>(result);
-            //}
-
             return new TutorialModel()
             {
                 TutorialLinkOne = "https://www.youtube.com/watch?v=-xRucA-vsbA",

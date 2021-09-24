@@ -24,7 +24,7 @@
     <PackageLogoSource>C:\Users\Anthony\Desktop\2.png</PackageLogoSource>
     <AppxShowAllApps>True</AppxShowAllApps>
     <AppxPackageIsForStore>True</AppxPackageIsForStore>
-    <AppxBuildConfigurationSelection>x64</AppxBuildConfigurationSelection>
+    <AppxBuildConfigurationSelection>x86|x64</AppxBuildConfigurationSelection>
     <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
     <UapAppxPackageBuildMode>StoreAndSideload</UapAppxPackageBuildMode>
   </PropertyGroup>

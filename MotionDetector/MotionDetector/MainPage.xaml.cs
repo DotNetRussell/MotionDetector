@@ -1,59 +1,37 @@
-﻿using LightBuzz.SMTP;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.Email;
-using Windows.Graphics.Imaging;
-using Windows.Media.Capture;
-using Windows.Media.MediaProperties;
-using Windows.Storage.Streams;
-using Windows.System.Display;
+﻿using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.Data.Json;
-using System.IO;
-using Newtonsoft.Json;
 using System.ComponentModel;
-using System.Collections.ObjectModel;
-using MotionDetector.ViewModels;
-using BasecodeLibrary.Controls;
 using RussLib.Pages;
 using MotionDetector.Views;
 using MotionDetector.Utilities;
-using Windows.UI.Core;
 using Windows.UI.Popups;
 using MotionDetector.Models;
-using Microsoft.ApplicationInsights.Extensibility;
-using System.Diagnostics;
-using Microsoft.ApplicationInsights;
 using Windows.ApplicationModel.Store;
 
 namespace MotionDetector
 {
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
+        private bool _premiumFeatures;
+        private TutorialModel _tutorialModels = null;
+
         private Visibility _AdVisibility;
+        private Visibility _PremiumVersionVisibility;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public Visibility AdVisibility
         {
             get { return _AdVisibility; }
-            set { _AdVisibility = value; OnPropertyChanged("AdVisibility"); }
+            set { _AdVisibility = value; OnPropertyChanged(nameof(AdVisibility)); }
         }
-
-        private Visibility _PremiumVersionVisibility;
 
         public Visibility PremiumVersionVisibility
         {
             get { return _PremiumVersionVisibility; }
-            set { _PremiumVersionVisibility = value; OnPropertyChanged("PremiumVersionVisibility"); }
+            set { _PremiumVersionVisibility = value; OnPropertyChanged(nameof(PremiumVersionVisibility)); }
         }
-
-        private TutorialModel _tutorialModels = null;
-
-        private bool _premiumFeatures;
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public bool PremiumFeatures
         {
@@ -62,10 +40,9 @@ namespace MotionDetector
             {
                 _premiumFeatures = value;
                 PremiumVersionVisibility = _premiumFeatures ? Visibility.Collapsed : Visibility.Visible;
-                OnPropertyChanged("PremiumFeatures");
+                OnPropertyChanged(nameof(PremiumFeatures));
             }
         }
-
 
         public MainPage()
         {
@@ -74,7 +51,6 @@ namespace MotionDetector
             this.InitializeComponent();
             this.Loaded += MainPage_Loaded;
         }
-
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
@@ -91,7 +67,7 @@ namespace MotionDetector
                 AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
                 PremiumFeatures = StoreServices.IsPremium;
    
-                _tutorialModels = await ConfigurationServices.GetTutorialLinks();
+                _tutorialModels = ConfigurationServices.GetTutorialLinks();
             }
             catch
             {
@@ -105,7 +81,7 @@ namespace MotionDetector
 
         private async void ShowPayWall()
         {
-            MessageDialog dialog = new MessageDialog("");
+            MessageDialog dialog = new MessageDialog(String.Empty);
             dialog.Commands.Add(new UICommand("Go Premium") { Id = 0 });
             dialog.Commands.Add(new UICommand("Stay Free but Weeeaaaakkk") { Id = 1 });
             dialog.Content = "In order to use this feature you must have the Premium Version.";
@@ -115,7 +91,6 @@ namespace MotionDetector
             {
                 PremiumFeatures = await StoreServices.OpenStorePurchasePremium();
                 AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
-                
             }
         }
 
@@ -123,11 +98,11 @@ namespace MotionDetector
         {
             switch (args.InvokedItem)
             {
-                case ("Unlock Premium Version $1.99"):
+                case "Unlock Premium Version $1.99":
                     PremiumFeatures = await StoreServices.OpenStorePurchasePremium();
                     AdVisibility = StoreServices.RemoveAds || StoreServices.IsPremium ? Visibility.Collapsed : Visibility.Visible;
                     break;
-                case ("Go into Hidden Mode"):
+                case "Go into Hidden Mode":
                     if (!PremiumFeatures)
                     {
                         ShowPayWall();
@@ -137,7 +112,7 @@ namespace MotionDetector
                         MainDisplayFrame.Navigate(typeof(HiddenModeDashboardPage));
                     }
                     break;
-                case ("Select Alert Sounds"):
+                case "Select Alert Sounds":
                     if (!PremiumFeatures)
                     {
                         ShowPayWall();
@@ -147,31 +122,31 @@ namespace MotionDetector
                         MainDisplayFrame.Navigate(typeof(AlertSoundsPage));
                     }
                     break;
-                case ("Schedule Active Hours"):
+                case "Schedule Active Hours":
                     if (!PremiumFeatures)
                     {
                         ShowPayWall();
                     }
                     break;
-                case ("Define Custom Alert Area"):
+                case "Define Custom Alert Area":
                     if (!PremiumFeatures)
                     {
                         ShowPayWall();
                     }
                     break;
-                case ("Dashboard"):
+                case "Dashboard":
                     if (MainDisplayFrame.CurrentSourcePageType != typeof(DashboardPage) )
                     {
                         MainDisplayFrame.Navigate(typeof(DashboardPage));
                     }
                     break;
-                case ("About"):
+                case "About":
                     MainDisplayFrame.Navigate(typeof(AboutPage));
                     break;
-                case ("Remove Ads $.99"):
+                case "Remove Ads $.99":
                     AdVisibility = await StoreServices.OpenStoreRemoveAds() ? Visibility.Collapsed : Visibility.Visible;
                     break;
-                case ("Tutorial"):
+                case "Tutorial":
                     Uri youtubeTutorial;
                     if (_tutorialModels != null)
                     {

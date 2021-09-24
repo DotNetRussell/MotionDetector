@@ -1,15 +1,11 @@
 ﻿using Models.MotionDetector;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MotionDetector.Utilities
 {
     public static class MotionServices
     {
-
         /// <summary>
         /// Determins if the image being examined is a dark image. If it is, then true will be returned
         /// </summary>
@@ -27,8 +23,6 @@ namespace MotionDetector.Utilities
             return average < ConfigurationSettings.AppConfig.DarkShiftThreshold;
         }
 
-
-
         /// <summary>
         /// Uses the parameters set in the config file to test the image passed in against all baseline images. If any of the baseline
         /// images match, then false is returned. Otherwise true is returned.
@@ -42,7 +36,6 @@ namespace MotionDetector.Utilities
 
             foreach (byte[] baseline in baselineImages)
             {
-
                 int changedPixels = 0;
 
                 for (int x = 0; x < baseline.Length; x++)

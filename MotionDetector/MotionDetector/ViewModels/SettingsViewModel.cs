@@ -21,6 +21,8 @@ namespace MotionDetector.ViewModels
         public ICommand UpdateSettingsCommand { get; set; }
         public List<string> ServerOptions { get { return new List<string>() { "Gmail", "Yahoo", "Custom" }; } }
         public ObservableCollection<VideoDeviceModel> AvailableCameras { get; set; }
+        public ConfigModel ConfigurationSettings { get; set; }
+
         public VideoDeviceModel SelectedCameraModel
         {
             get => selectedCameraModel;
@@ -32,11 +34,10 @@ namespace MotionDetector.ViewModels
             }
         }
 
-        public ConfigModel ConfigurationSettings { get; set; }
         public bool IsNotRunningTest
         {
             get { return _isNotRunningTest; }
-            set { _isNotRunningTest = value; OnPropertyChanged("IsNotRunningTest"); }
+            set { _isNotRunningTest = value; OnPropertyChanged(nameof(IsNotRunningTest)); }
         }
 
         public SettingsViewModel()
@@ -50,7 +51,6 @@ namespace MotionDetector.ViewModels
             this.ConfigurationSettings.SmtpSettings.PropertyChanged -= SettingsViewModel_PropertyChanged;
         }
 
-
         private async void Setup()
         {
             AvailableCameras = new ObservableCollection<VideoDeviceModel>();
@@ -58,7 +58,7 @@ namespace MotionDetector.ViewModels
             UpdateSettingsCommand = new CommandHandler(UpdateSettingsExecuted);
 
             ConfigurationSettings = await ConfigurationServices.GetConfig();
-            OnPropertyChanged("ConfigurationSettings");
+            OnPropertyChanged(nameof(ConfigurationSettings));
             this.ConfigurationSettings.AppConfig.PropertyChanged += SettingsViewModel_PropertyChanged;
             this.ConfigurationSettings.SmtpSettings.PropertyChanged += SettingsViewModel_PropertyChanged;
             await LoadCameras();
@@ -89,11 +89,11 @@ namespace MotionDetector.ViewModels
             {
                 switch (ConfigurationSettings.SmtpSettings.PreferredSmtpServer)
                 {
-                    case ("Gmail"):
+                    case "Gmail":
                         ConfigurationSettings.SmtpSettings.SmtpServer = "smtp.gmail.com";
                         ConfigurationSettings.SmtpSettings.SmtpPort = 465;
                         break;
-                    case ("Yahoo"):
+                    case "Yahoo":
                         ConfigurationSettings.SmtpSettings.SmtpServer = "smtp.mail.yahoo.com";
                         ConfigurationSettings.SmtpSettings.SmtpPort = 465;
                         break;

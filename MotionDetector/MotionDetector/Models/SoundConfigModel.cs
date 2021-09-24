@@ -1,44 +1,36 @@
 ﻿using BaseCodeLibrary.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MotionDetector.Models
 {
     public class SoundConfigModel : ModelBase
     {
         private bool _playSounds;
+        private string _soundName;
+        private bool _playContinuous;
+        private int _continuousSecondDelay;
 
         public bool PlaySounds
         {
             get { return _playSounds; }
-            set { _playSounds = value; OnPropertyChanged("PlaySounds"); }
+            set { _playSounds = value; OnPropertyChanged(nameof(PlaySounds)); }
         }
-
-        private bool _playContinuous;   
 
         public bool PlayContinuous
         {
             get { return _playContinuous; }
-            set { _playContinuous = value; OnPropertyChanged("PlayContinuous"); }
+            set { _playContinuous = value; OnPropertyChanged(nameof(PlayContinuous)); }
         }
-
-        private int _continuousSecondDelay;
 
         public int ContinuousSecondDelay
         {
             get { return _continuousSecondDelay; }
-            set { _continuousSecondDelay = value; OnPropertyChanged("ContinuousSecondDelay"); }
+            set { _continuousSecondDelay = value; OnPropertyChanged(nameof(ContinuousSecondDelay)); }
         }
-
-        private string _soundName;
 
         public string SoundName
         {
             get { return _soundName; }
-            set { _soundName = value; OnPropertyChanged("SoundName"); }
+            set { _soundName = value; OnPropertyChanged(nameof(SoundName)); }
         }
     }
 }

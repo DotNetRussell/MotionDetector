@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
@@ -12,7 +10,6 @@ using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
-using Windows.UI.Xaml.Controls;
 
 namespace MotionDetector.Utilities
 {
@@ -40,7 +37,6 @@ namespace MotionDetector.Utilities
             }
         }
 
-
         public static async void SaveImage(AlertDisplayImageModel SelectedAlertImage)
         {
             if (SelectedAlertImage != null)
@@ -59,8 +55,14 @@ namespace MotionDetector.Utilities
                         byte[] pixels = new byte[pixelStream.Length];
                         await pixelStream.ReadAsync(pixels, 0, pixels.Length);
 
-                        encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore,
-                                    (uint)SelectedAlertImage.AlertDisplayImage.PixelWidth, (uint)SelectedAlertImage.AlertDisplayImage.PixelHeight, 96.0, 96.0, pixels);
+                        encoder.SetPixelData(BitmapPixelFormat.Bgra8, 
+                                             BitmapAlphaMode.Ignore,
+                                             (uint)SelectedAlertImage.AlertDisplayImage.PixelWidth, 
+                                             (uint)SelectedAlertImage.AlertDisplayImage.PixelHeight, 
+                                             96.0, 
+                                             96.0, 
+                                             pixels);
+
                         await encoder.FlushAsync();
                     }
                 }
