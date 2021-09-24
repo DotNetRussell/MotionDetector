@@ -79,8 +79,6 @@ namespace MotionDetector.ViewModels
         /// </summary>
         private DispatcherTimer baselineTimer { get; set; }
 
-        private DisplayRequest displayRequest { get; set; }
-
         /// <summary>
         /// This is the list of images that will be emailed to the recipient once the threshold has been met.
         /// </summary>
@@ -102,7 +100,6 @@ namespace MotionDetector.ViewModels
             baselineImages = new List<byte[]>();
             captureTimer = new DispatcherTimer();
             baselineTimer = new DispatcherTimer();
-            displayRequest = new DisplayRequest();
             streamList = new List<IRandomAccessStream>();
             DisplayImages = new ObservableCollection<WriteableBitmap>();
             AlertDisplayImages = new ObservableCollection<AlertDisplayImageModel>();
@@ -112,28 +109,39 @@ namespace MotionDetector.ViewModels
             InitializeCaptureSinkCommand = new CommandHandler(InitializeCameraAndSink);
         }
 
+        ~MotionDetectorViewModel()
+        {
+            Destroyer();
+        }
 
         public void Destroyer()
         {
-            MediaCaptureElement?.StopPreviewAsync();
-            MediaCaptureElement?.Dispose();
-            MediaCaptureElement = null;
-            baselineImages = null;
-            captureTimer?.Stop();
-
-            if (baselineTimer != null && captureTimer != null)
+            try
             {
-                //for some reason I can't use the null check operator with events? Super weird 
-                baselineTimer.Tick -= OnBaselineTimerTick;
-                captureTimer.Tick -= OnCaptureTimerTick;
+                SaveImageCommand = null;
+                StopAlertSoundCommand = null;
+                InitializeCaptureSinkCommand = null;
+                MediaCaptureElement?.StopPreviewAsync();
+                MediaCaptureElement?.Dispose();
+                MediaCaptureElement = null;
+                baselineImages = null;
+                captureTimer?.Stop();
+
+                if (baselineTimer != null && captureTimer != null)
+                {
+                    //for some reason I can't use the null check operator with events? Super weird 
+                    baselineTimer.Tick -= OnBaselineTimerTick;
+                    captureTimer.Tick -= OnCaptureTimerTick;
+                }
+                captureTimer = null;
+                baselineTimer = null;
+                streamList = null;
+                DisplayImages = null;
+                AlertDisplayImages = null;
+
+                SaveImageCommand = null;
             }
-
-            displayRequest = null;
-            streamList = null;
-            DisplayImages = null;
-            AlertDisplayImages = null;
-
-            SaveImageCommand = null;
+            catch { }
         }
 
         #endregion
@@ -152,6 +160,11 @@ namespace MotionDetector.ViewModels
 
         public async void InitializeCameraAndSink()
         {
+            await InitializeCameraAndSinkImplementation();
+        }
+
+        private async Task InitializeCameraAndSinkImplementation()
+        {
             try
             {
                 // If the element isn't null and it's just not streaming, that means we're still initializing it
@@ -164,12 +177,21 @@ namespace MotionDetector.ViewModels
                 }
 
                 MediaCaptureElement = new MediaCapture();
+
                 DisplayRequest _displayRequest = new DisplayRequest();
 
                 //make request to put in active state
                 _displayRequest.RequestActive();
 
-                await MediaCaptureElement.InitializeAsync();
+                if (ConfigurationSettings?.AppConfig.SelectedCameraId != null)
+                {
+                    await MediaCaptureElement.InitializeAsync(new MediaCaptureInitializationSettings() { VideoDeviceId = ConfigurationSettings?.AppConfig.SelectedCameraId });
+                }
+                else
+                {
+                    await MediaCaptureElement.InitializeAsync();
+                }
+
                 caputureSink.Source = MediaCaptureElement;
 
                 await MediaCaptureElement.StartPreviewAsync();
@@ -180,14 +202,14 @@ namespace MotionDetector.ViewModels
         /// <summary>
         /// Sets up the application and initializes the camera.
         /// </summary>
-        public async void Setup()
+        public async Task Setup()
         {
             try
             {
 
                 ConfigurationSettings = await ConfigurationServices.GetConfig();
 
-                InitializeCameraAndSink();
+                await InitializeCameraAndSinkImplementation();
 
                 baselineTimer.Interval = new TimeSpan(0, 0, 3);
                 baselineTimer.Tick += OnBaselineTimerTick;
@@ -241,6 +263,11 @@ namespace MotionDetector.ViewModels
         {
             try
             {
+                if(baselineImages == null)
+                {
+                    return;
+                }
+
                 SoftwareBitmap softwareBitmap = await CameraServices.CaptureImage(MediaCaptureElement);
 
                 WriteableBitmap writeableBitmap = new WriteableBitmap(softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);

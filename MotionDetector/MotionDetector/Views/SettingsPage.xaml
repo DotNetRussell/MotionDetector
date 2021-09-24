@@ -34,7 +34,8 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="60"/>
                 <RowDefinition Height="Auto"/>
@@ -152,19 +153,37 @@
                 Text="{Binding ConfigurationSettings.AppConfig.DarkShiftThreshold, 
                 Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="14" >
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="15" >
                 <HyperlinkButton Click="BrowseToYoutubeTutorial">Click Here For a Configuration Tutorial</HyperlinkButton>
                 <HyperlinkButton Click="BrowseToGmailSecurity">Click Here to enable gmail accounts</HyperlinkButton>               
             </StackPanel>
-            
+
+            <TextBlock Text="Choose Your Camera Source:"
+                       Grid.Column="0"
+                       Grid.Row="14" />
+            <ComboBox SelectionChangedTrigger="Always"
+                      ItemsSource="{Binding AvailableCameras}"
+                      HorizontalAlignment="Stretch"
+                      SelectedValue="{Binding SelectedCameraModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      ToolTipService.ToolTip="Choose your camera source"
+                      Margin="100,0,0,0"
+                      Grid.Column="1"
+                      Grid.Row="14"
+                      Width="Auto">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DeviceName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
             <Button 
-                Grid.Column="0" Grid.Row="14"
+                Grid.Column="0" Grid.Row="15"
                 Command="{Binding Path=RunTestsCommand}" 
                 IsEnabled="{Binding Path=IsNotRunningTest, UpdateSourceTrigger=PropertyChanged}"                                 
                 ToolTipService.ToolTip="Sends a single test image to the recipient's email" 
                 Content="Test SMTP Configuration" />
             <Button 
-                Grid.Column="0" Grid.Row="15" Margin="0,10,0,0" Background="DodgerBlue"
+                Grid.Column="0" Grid.Row="16" Margin="0,10,0,0" Background="DodgerBlue"
                 Command="{Binding Path=UpdateSettingsCommand}"                              
                 ToolTipService.ToolTip="Updates the Configuration Settings for the Application" 
                 Content="Update Settings" />

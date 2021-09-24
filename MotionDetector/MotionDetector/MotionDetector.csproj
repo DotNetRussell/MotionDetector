@@ -2,6 +2,7 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <DisableXbfLineInfo>False</DisableXbfLineInfo>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{F1811D8A-951E-4BAF-AF2D-BC9CC8025267}</ProjectGuid>
@@ -27,7 +28,8 @@
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <PackageCertificateThumbprint>272AE4B407358A5D927D885CC35199DCA08770D6</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>
+    </PackageCertificateThumbprint>
     <PackageCertificateKeyFile>MotionDetector_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -118,6 +120,7 @@
     <Compile Include="Models\SmtpSettingsModel.cs" />
     <Compile Include="Models\SoundConfigModel.cs" />
     <Compile Include="Models\TutorialModel.cs" />
+    <Compile Include="Models\VideoDeviceModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\CameraServices.cs" />
     <Compile Include="Utilities\ConfigurationServices.cs" />
@@ -130,6 +133,9 @@
     <Compile Include="ViewModels\SoundSetupViewModel.cs" />
     <Compile Include="Views\AlertSoundsPage.xaml.cs">
       <DependentUpon>AlertSoundsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\BlankPage.xaml.cs">
+      <DependentUpon>BlankPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DashboardPage.xaml.cs">
       <DependentUpon>DashboardPage.xaml</DependentUpon>
@@ -222,6 +228,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\AlertSoundsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\BlankPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

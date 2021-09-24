@@ -25,8 +25,8 @@
     <AppxShowAllApps>True</AppxShowAllApps>
     <AppxPackageIsForStore>True</AppxPackageIsForStore>
     <AppxBuildConfigurationSelection>x64</AppxBuildConfigurationSelection>
-    <PackageOptionalProjectsInIdeBuilds>True</PackageOptionalProjectsInIdeBuilds>
-    <UapAppxPackageBuildMode>StoreOnly</UapAppxPackageBuildMode>
+    <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
+    <UapAppxPackageBuildMode>StoreAndSideload</UapAppxPackageBuildMode>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
     <DeviceId>30F105C9-681E-420b-A277-7C086EAD8A4E</DeviceId>

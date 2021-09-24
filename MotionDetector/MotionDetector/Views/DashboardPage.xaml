@@ -15,16 +15,11 @@
     <Grid>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width=".2*" />
-                <ColumnDefinition Width=".80*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width=".7*" />
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
 
             <Border Canvas.ZIndex="1"
-                    Grid.Row="1"
                     Grid.Column="1"
                     VerticalAlignment="Top"
                     HorizontalAlignment="Center"
@@ -42,21 +37,25 @@
             <Border Name="AlertButton"
                     Canvas.ZIndex="1"
                     Visibility="Collapsed"
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    VerticalAlignment="Top"
+                    Grid.Column="0"
+                    VerticalAlignment="Bottom"
                     HorizontalAlignment="Left">
                 <Button Background="Red"
                         Height="50"
                         Width="250"
+                        Canvas.ZIndex="1"
                         FontWeight="Bold"
                         Command="{Binding StopAlertSoundCommand}">STOP ALERTING SOUND</Button>
             </Border>
+
+            <ContentControl Grid.Column="1"
+                            HorizontalAlignment="Left"
+                            Name="captureElementControl" />
             <Border Width="250"
+                    Grid.Column="0"
                     BorderBrush="White"
                     BorderThickness="2"
-                    HorizontalAlignment="Left"
-                    Grid.RowSpan="2">
+                    HorizontalAlignment="Left">
                 <Pivot>
                     <PivotItem Header="Baseline Images">
                         <ListView SelectionMode="Single"
@@ -101,9 +100,6 @@
 
             </Border>
 
-            <ContentControl Grid.Row="1"
-                            Grid.Column="1"
-                            Name="captureElementControl" />
         </Grid>
         <baseCodeControls:RateReminder x:Name="rateReminder"
                                        ReminderTrigger="3"

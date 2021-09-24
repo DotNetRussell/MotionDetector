@@ -1,27 +1,13 @@
 ﻿using MotionDetector.ViewModels;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace MotionDetector.Views
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class HiddenModeDashboardPage : Page, INotifyPropertyChanged
     {
         private string _destinationAddress;
@@ -31,19 +17,34 @@ namespace MotionDetector.Views
         public string DestinationAddress
         {
             get { return _destinationAddress; }
-            set { _destinationAddress = value; OnPropertyChanged("DestinationAddress"); }
+            set { _destinationAddress = value; OnPropertyChanged(nameof(DestinationAddress)); }
         }
 
         public HiddenModeDashboardPage()
         {
-            this.InitializeComponent();
-            this.DataContext = this;
-            webBrowser.NavigationCompleted += WebBrowser_NavigationCompleted;
-            this.AddressTextBox.KeyDown += AddressTextBox_KeyDown;
+            this.InitializeComponent();          
+        }
 
-            hiddenDashboard.Navigate(typeof(DashboardPage));
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            DataContext = this;
+            webBrowser.NavigationCompleted += WebBrowser_NavigationCompleted;
+            AddressTextBox.KeyDown += AddressTextBox_KeyDown;
+
+            hiddenDashboard.Navigate(typeof(DashboardPage), false);
             DestinationAddress = "https://www.google.com";
             NavigateForwardImp();
+            base.OnNavigatedTo(e);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            hiddenDashboard.Navigate(typeof(BlankPage));
+            webBrowser.NavigationCompleted -= WebBrowser_NavigationCompleted;
+            AddressTextBox.KeyDown -= AddressTextBox_KeyDown;
+            DataContext = null;
+            webBrowser = null;
+            base.OnNavigatedFrom(e);
         }
 
         private void WebBrowser_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
@@ -101,7 +102,7 @@ namespace MotionDetector.Views
 
         private void ToggleHiddenDashboard(object sender, RoutedEventArgs e)
         {
-            if(hiddenDashboard.Visibility == Visibility.Visible)
+            if (hiddenDashboard.Visibility == Visibility.Visible)
             {
                 webBrowser.Visibility = Visibility.Visible;
                 hiddenDashboard.Visibility = Visibility.Collapsed;

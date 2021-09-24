@@ -31,7 +31,7 @@
                 <SymbolIcon Symbol="SolidStar"  />
             </Button>
         </Grid>
-        <WebView Grid.Row="1" Name="webBrowser" Grid.ColumnSpan="4" />
+        <WebView Grid.Row="1" Name="webBrowser" Grid.ColumnSpan="4"  />
         <Frame Margin="50" Grid.Row="1" Name="hiddenDashboard" Visibility="Collapsed" />
     </Grid>
 </Page>

@@ -13,8 +13,6 @@ namespace MotionDetector.Views
 {
     public sealed partial class DashboardPage : Page
     {
-        public ConfigModel ConfigurationSettings { get; set; }
-        private MotionDetectorViewModel viewModel { get; set; }
 
         public ICommand InitializeCaptureSinkCommand
         {
@@ -46,10 +44,7 @@ namespace MotionDetector.Views
         public DashboardPage()
         {
             this.InitializeComponent();
-            App.Current.LeavingBackground += Current_LeavingBackground;
-            App.Current.EnteredBackground += Current_EnteredBackground;
 
-            this.DataContextChanged += DashboardPage_DataContextChanged;
         }
 
         private void DashboardPage_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
@@ -72,12 +67,21 @@ namespace MotionDetector.Views
         }
         //*****************************************************************************//
 
-        private void Setup()
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            viewModel = new MotionDetectorViewModel(); 
+            if(e.Parameter is bool showRateReminder && !showRateReminder)
+            {
+                rateReminder = null;
+            }
+
+            App.Current.LeavingBackground += Current_LeavingBackground;
+            App.Current.EnteredBackground += Current_EnteredBackground;
+            this.DataContextChanged += DashboardPage_DataContextChanged;
+            MotionDetectorViewModel viewModel = new MotionDetectorViewModel();
             this.DataContext = viewModel;
-           
-            viewModel.Setup();
+
+            await viewModel.Setup();
+            viewModel.caputureSink.HorizontalAlignment = HorizontalAlignment.Stretch;
             this.captureElementControl.Content = viewModel.caputureSink;
 
             if (StoreServices.IsPremium)
@@ -86,16 +90,15 @@ namespace MotionDetector.Views
             }
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            Setup();
-        }
-
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            captureElementControl.Content = null;
             (this.DataContext as MotionDetectorViewModel).Destroyer();
+            this.DataContext = null;
             App.Current.LeavingBackground -= Current_LeavingBackground;
             App.Current.EnteredBackground -= Current_EnteredBackground;
+            this.DataContextChanged -= DashboardPage_DataContextChanged;
+            this.DataContext = null;
             base.OnNavigatedFrom(e);
         }
         
